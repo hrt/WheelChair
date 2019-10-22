@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "manifest_version": 2,
   "description": "https://github.com/hrt/wheelchair",
+  "web_accessible_resources": ["wheelchair.min.js", "patch_world.min.js"],
   "content_scripts": [
   	{"matches":["*://krunker.io/*"],"run_at": "document_start","js": ["chairloader.js"],"all_frames":true,"match_about_blank":true}]
 }

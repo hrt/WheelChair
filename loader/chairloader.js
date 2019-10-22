@@ -14,15 +14,21 @@ try {
 		if (!recursing) {
 			// must be synchronous to force execution before other scripts
 			// note: we fetch the same code for each iframe
-			let request = new XMLHttpRequest();
-			request.open('GET', 'https://raw.githubusercontent.com/hrt/WheelChair/master/wheelchair.min.js', false);
-			request.send(null);
-			if (request.status != 200) {
-				console.error('Error GET wheelchair: ' + request.status);
+			let chair_req = new XMLHttpRequest();
+			chair_req.open('GET', 'https://raw.githubusercontent.com/hrt/WheelChair/master/wheelchair.min.js', false);
+			chair_req.send(null);
+			if (chair_req.status != 200) {
+				console.error('Error GET wheelchair: ' + chair_req.status);
+			}
+
+			let patch_req = new XMLHttpRequest();
+			patch_req.open('GET', 'https://raw.githubusercontent.com/hrt/WheelChair/master/patch_world.min.js', false);
+			patch_req.send(null);
+			if (patch_req.status != 200) {
+				console.error('Error GET patch_world: ' + patch_req.status);
 			}
 
 			const unique_string = chrome.runtime.getURL('').match(/\/\/(\w{9})\w+\//)[1];
-			let code = request.responseText.replace(/ttap#4547/g, unique_string);
 
 			// inject our code into a new iframe to avoid using hooks placed by anti cheat
 			let frame = document.createElement('iframe');
@@ -30,10 +36,15 @@ try {
 			document.documentElement.appendChild(frame);
 			let child = frame.contentDocument || frame.contentWindow.document;
 			let chair = document.createElement('script');
-			chair.innerHTML = code;
+			chair.innerHTML = chair_req.responseText.replace(/ttap#4547/g, unique_string);;
 			child.documentElement.append(chair);
 			child.documentElement.remove(chair);
 			document.documentElement.removeChild(frame);
+
+			let patch = document.createElement('script');
+			patch.innerHTML = patch_req.responseText.replace(/ttap#4547/g, unique_string);
+			document.documentElement.appendChild(patch);
+			document.documentElement.removeChild(patch);
 		}
 	} catch (e) {
 		if (e instanceof DOMException) {
