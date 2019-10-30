@@ -1,3 +1,5 @@
+credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
+
 # Gold Standard WheelChair
 Christmas is early,
 Note: certain features have been removed but it should still destroy
