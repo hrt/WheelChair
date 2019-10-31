@@ -251,6 +251,9 @@
             // color blind mode
             script = script.replace(/#9eeb56/g, '#00FFFF');
 
+            // no zoom
+            script = script.replace(/,'zoom':.+?(?=,)/g, ",'zoom':1");
+
             // an extremely old canHit / autowall function creator that doesn't alter canSee
             // dumb asf but if it still works then should I touch it :thinking:
             var canSee = script.match(/this\['canSee'\]\=function.+?(?=return null;})/)[0] + "return null;}";
