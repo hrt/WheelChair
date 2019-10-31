@@ -166,19 +166,10 @@
                 continue;
             }
 
-            // experimental prediction
-            // just use normal xyz values instead for potentially better aim :shrug:
-            var scale = Math.min(1.6, e.dt/(consts.serverSendRate * consts.interpolation));
-            // this check is so that we don't shoot people that just respawn
-            if (math.getDistance3D(e.x2, e.y2, e.z2, e.x, e.y, e.z) < 100) {
-                e.x3 = e.x + (e.x2 - e.x) * scale;
-                e.y3 = e.y + (e.y2 - e.y) * scale;
-                e.z3 = e.z + (e.z2 - e.z) * scale;
-            } else {
-                e.x3 = e.x;
-                e.y3 = e.y;
-                e.z3 = e.z;
-            }
+            // experimental prediction removed - otherwise they'd be in x3 y3 z3
+            e.x3 = e.x;
+            e.y3 = e.y;
+            e.z3 = e.z;
 
             if (!isCloseEnough(e) || !canHit(e)) {
                 continue;
