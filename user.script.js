@@ -11,6 +11,7 @@
 
 (function(){
     var hideHook = function(fn, oFn) { fn.toString = oFn.toString.bind(oFn); }
+    const replace = String.prototype.replace;
 
     var hrtCheat = function(me, inputs, world, consts, math) {
         var controls = world.controls;
@@ -237,19 +238,19 @@
             var ttapParams = [me, inputs, world, consts, math];
 
             // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
-            script = script.replace(hook, tokens[0] + '(' + hrtCheat.toString().replace(/\/\*.+?\*\/|\/\/.*(?=[\n\r])|\n/g, '') + ')(' + ttapParams + '),');
+            script = replace.call(script, hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
 
             // remove renders
-            script = script.replace(/'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
+            script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
 
             // all weapons trails on
-            script = script.replace(/\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
+            script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
 
             // color blind mode
-            script = script.replace(/#9eeb56/g, '#00FFFF');
+            script = replace.call(script, /#9eeb56/g, '#00FFFF');
 
             // no zoom
-            script = script.replace(/,'zoom':.+?(?=,)/g, ",'zoom':1");
+            script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
 
             // an extremely old canHit / autowall function creator that doesn't alter canSee
             // dumb asf but if it still works then should I touch it :thinking:
@@ -266,7 +267,7 @@
             search = canHit.match(/\![a-zA-Z0-9]*\['transparent'\]/)[0];
             // todo: onhit logic doesn't make sense
             canHit = canHit.replace(search, "(!"+object+".penetrable||!"+player+".weapon.pierce)");
-            script = script.replace(",this['canSee']", ","+canHit+",this['canSee']");
+            script = replace.call(script, ",this['canSee']", ","+canHit+",this['canSee']");
 
             args[1] = script;
         }
