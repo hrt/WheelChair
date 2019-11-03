@@ -34,9 +34,6 @@
         // runs once
         if (!window.init) {
             window.init = true;
-            /*************************************/
-            /* crimpeek / faster bullets removed */
-            /*************************************/
 
             var drawVisuals = function(c) {
                 var scalingFactor = arguments.callee.caller.caller.arguments[0];
@@ -148,7 +145,7 @@
                     material.wireframe = true;
 
                 }
-            }
+            };
             // render all the visuals
             var original_clearRect = CanvasRenderingContext2D.prototype.clearRect;
             CanvasRenderingContext2D.prototype.clearRect = function(...args){
@@ -240,7 +237,7 @@
             var ttapParams = [me, inputs, world, consts, math];
 
             // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
-            script = script.replace(hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
+            script = script.replace(hook, tokens[0] + '(' + hrtCheat.toString().replace(/\/\*.+?\*\/|\/\/.*(?=[\n\r])|\n/g, '') + ')(' + ttapParams + '),');
 
             // remove renders
             script = script.replace(/'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
