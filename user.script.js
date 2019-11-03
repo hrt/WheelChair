@@ -255,18 +255,18 @@
             // an extremely old canHit / autowall function creator that doesn't alter canSee
             // dumb asf but if it still works then should I touch it :thinking:
             var canSee = script.match(/this\['canSee'\]\=function.+?(?=return null;})/)[0] + "return null;}";
-            var canHit = canSee.replace(/canSee/g, "canHit");
-            canHit = canHit.replace(/\|\|0x0;/, "||0x0;var pcount=0;");
+            var canHit = replace.call(canSee, /canSee/g, "canHit");
+            canHit = replace.call(canHit, /\|\|0x0;/, "||0x0;var pcount=0;");
             var player = canHit.match(/function\(([a-zA-Z0-9]*),/)[1];
             var object = canHit.match(/([a-zA-Z0-9]*)\=this\['map'\]\['manager'\]\['objects'/)[1];
             var statement = canHit.match(/\['transparent'\]\){(.+?(?=}))/)[1];
             var ret = statement.match(/return [a-zA-Z0-9]*/)[0];
-            statement = statement.replace(ret, "{pcount+=1; if(pcount>1&&"+player+".weapon.pierce>0.8){"+ret+"}}");
+            statement = replace.call(statement, ret, "{pcount+=1; if(pcount>1&&"+player+".weapon.pierce>0.8){"+ret+"}}");
             var search = canHit.match(/return [a-zA-Z0-9]*;\}/)[0];
-            canHit = canHit.replace(search, search + 'else if('+object+'.active&&'+object+'.penetrable){'+statement+'}')
+            canHit = replace.call(canHit, search, search + 'else if('+object+'.active&&'+object+'.penetrable){'+statement+'}')
             search = canHit.match(/\![a-zA-Z0-9]*\['transparent'\]/)[0];
             // todo: onhit logic doesn't make sense
-            canHit = canHit.replace(search, "(!"+object+".penetrable||!"+player+".weapon.pierce)");
+            canHit = replace.call(canHit, search, "(!"+object+".penetrable||!"+player+".weapon.pierce)");
             script = replace.call(script, ",this['canSee']", ","+canHit+",this['canSee']");
 
             args[1] = script;
