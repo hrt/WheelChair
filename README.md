@@ -1,12 +1,6 @@
 credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
 
-
-note: 
-~~This repo uses [FunctionHook bypass](https://github.com/hrt/KrunkerBypass/) which krunker targeted in 1.8.3 and is currently detected~~
-fixed for 1.8.3
-
-Head over to [masterPs fork](https://github.com/MasterP-kr/WheelChair) for an alternative bypass and menu
-
+1.8.4
 
 # Gold Standard WheelChair
 Christmas is early,
