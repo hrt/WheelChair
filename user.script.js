@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Krunker Powered WheelChair
 // @namespace    https://github.com/hrt
-// @version      1.8.3
+// @version      1.8.4
 // @description  WheelChair
 // @author       hrt x ttap x MasterP
 // @match        *://krunker.io/*
 // @run-at       document-start
 // @require      https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js
-// @require      https://krunkr.com/assets/js/canvas.gui.js?ver=0.6
+// @require      https://krunkr.com/assets/js/canvas.gui.js?ver=0.7
 // @grant        none
 // ==/UserScript==
 WebFont.load({
@@ -32,16 +32,11 @@ WebFont.load({
         chamsColorStr: "rgba(255,0,0,1)",
         chamsRed: 255,
         chamsBlue: 0,
-        chamsGreen: 0
+        chamsGreen: 0,
     };
     window.options = options;
     const styles = {
         fontFamily: "Roboto",
-        gui: {
-            x: 0,
-            y: 0,
-            width: 250
-        },
         itemHeight: 28,
         setup: {
             background: "#0B132B",
@@ -77,22 +72,30 @@ WebFont.load({
         button: {
             background: "#1C2541",
             lineTop: "#5BC0BE",
-            color: "#4c698d"
+            color: "#4c698d",
+            hovered: "#5BC0BE",
+            hoveredColor: "#242f53"
         },
         checkbox: {
             background: "#242f53",
             checkedBg: "#5BC0BE",
-            hovered: "rgba(91,192,190,0.3)"
+            hovered: "rgba(91,192,190,0.3)",
+            width: 18,
+            height: 18
         },
         input: {
             background: "#242f53",
             color: "#4c698d",
-            cursor: "#839cbc"
+            cursor: "#839cbc",
+            width: 120,
+            height: 22
         },
         select: {
             background: "#242f53",
             color: "#4c698d",
-            hovered: "#3A506B"
+            hovered: "#3A506B",
+            width: 80,
+            height: 20,
         },
         option: {
             background: "#242f53",
@@ -105,11 +108,18 @@ WebFont.load({
             background: "#242f53",
             color: "#5BC0BE",
             slider: "#5BC0BE",
-            hovered: "#3A506B"
+            hovered: "#3A506B",
+            width: 89,
+            height: 20,
+            leftPadding: 100,
+            input: {
+                width: 43,
+            }
         }
     }
 
-    let lastValues = {}
+
+    const replace = String.prototype.replace;
     var hideHook = function (fn, oFn) {
         fn.toString = oFn.toString.bind(oFn);
     }
@@ -161,7 +171,6 @@ WebFont.load({
             window.options.chamsGreen = (g - 0) / (255 - 0)
             window.options.chamsBlue = (b - 0) / (255 - 0)
         })
-
 
     window.hrtCheat = function (me, inputs, world, consts, math) {
         var controls = world.controls;
@@ -423,13 +432,20 @@ WebFont.load({
         }
 
     }
-
     // only big iq people read this ttap#4547
     // big up my boy hrt and ttap for releasing
     const handler = {
         construct(target, args) {
             if (args.length == 2 && args[1].includes('Seen')) {
                 var script = args[1];
+
+                // anti retard / version fix
+                var version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
+                if (version !== "0x10967") {
+                    document.write('Version missmatch, wait for hrt');
+                    document.write('Version missmatch ( ' + version + ')');
+                    window.location.href = atob('aHR0cHM6Ly9naXRodWIuY29tL2hydC93aGVlbGNoYWly');
+                }
 
                 var hook = /(\w+)\['tmpInputs'\]\['push'\]\((\w+)\),/;
                 var tokens = script.match(hook);
@@ -442,108 +458,50 @@ WebFont.load({
                 var ttapParams = [me, inputs, world, consts, math];
 
                 // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
-                script = script.replace(hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
-
+                script = replace.call(script, hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
 
                 //Remove clear rect inside overlay render.
-                script = script.replace(/,\w+\['clearRect'\]\(0x0,0x0,\w+,\w+\)/, "");
-
-                //Hook overlay render and force menu to clear frame
-                script = script.replace(/(\w+)\[\'render\'\]\((\w+),\w+,(\w+),\w+,\w+\),/, (a, b, c, d) => `window.menu.draw(${b}.canvas,true),(window.drawVisuals && window.drawVisuals(${b}.canvas,${c},${d})),${a} `);
+                script = replace.call(script, /,\w+\['clearRect'\]\(0x0,0x0,\w+,\w+\)/, "");
 
                 // remove renders
-                script = script.replace(/'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, '!window.options.boxEsp && !window.options.weaponEsp && !window.options.healthEsp && !window.options.healthEsp)');
+                script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, '!window.options.boxEsp && !window.options.weaponEsp && !window.options.healthEsp && !window.options.healthEsp)');
+
+                //Hook overlay render and force menu to clear frame
+                script = replace.call(script, /(\w+)\[\'render\'\]\((\w+),\w+,(\w+),\w+,\w+\),/, (a, b, c, d) => `window.menu.draw(${b}.canvas,true),(window.drawVisuals && window.drawVisuals(${b}.canvas,${c},${d})),${a} `);
 
                 // all weapons trails on
-                script = script.replace(/\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
+                script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
 
                 // color blind mode
-                script = script.replace(/#9eeb56/g, '#00FFFF');
+                script = replace.call(script, /#9eeb56/g, '#00FFFF');
 
                 // no zoom
-                script = script.replace(/,'zoom':.+?(?=,)/g, ",'zoom':1");
+                script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
 
                 // an extremely old canHit / autowall function creator that doesn't alter canSee
                 // dumb asf but if it still works then should I touch it :thinking:
                 var canSee = script.match(/this\['canSee'\]\=function.+?(?=return null;})/)[0] + "return null;}";
-                var canHit = canSee.replace(/canSee/g, "canHit");
-                canHit = canHit.replace(/\|\|0x0;/, "||0x0;var pcount=0;");
+                var canHit = replace.call(canSee, /canSee/g, "canHit");
+                canHit = replace.call(canHit, /\|\|0x0;/, "||0x0;var pcount=0;");
                 var player = canHit.match(/function\(([a-zA-Z0-9]*),/)[1];
                 var object = canHit.match(/([a-zA-Z0-9]*)\=this\['map'\]\['manager'\]\['objects'/)[1];
                 var statement = canHit.match(/\['transparent'\]\){(.+?(?=}))/)[1];
                 var ret = statement.match(/return [a-zA-Z0-9]*/)[0];
-                statement = statement.replace(ret, "{pcount+=1; if(pcount>1&&" + player + ".weapon.pierce>0.8){" + ret + "}}");
+                statement = replace.call(statement, ret, "{pcount+=1; if(pcount>1&&" + player + ".weapon.pierce>0.8){" + ret + "}}");
                 var search = canHit.match(/return [a-zA-Z0-9]*;\}/)[0];
-                canHit = canHit.replace(search, search + 'else if(' + object + '.active&&' + object + '.penetrable){' + statement + '}')
+                canHit = replace.call(canHit, search, search + 'else if(' + object + '.active&&' + object + '.penetrable){' + statement + '}')
                 search = canHit.match(/\![a-zA-Z0-9]*\['transparent'\]/)[0];
                 // todo: onhit logic doesn't make sense
-                canHit = canHit.replace(search, "(!" + object + ".penetrable||!" + player + ".weapon.pierce)");
-                script = script.replace(",this['canSee']", "," + canHit + ",this['canSee']");
+                canHit = replace.call(canHit, search, "(!" + object + ".penetrable||!" + player + ".weapon.pierce)");
+                script = replace.call(script, ",this['canSee']", "," + canHit + ",this['canSee']");
 
                 args[1] = script;
             }
             return new target(...args);
         }
     };
-    const decode = TextDecoder.prototype.decode;
-    TextDecoder.prototype.decode = function () {
-        var script = decode.apply(this, arguments);
-        if (script.length > /*Lemons*/ 80000 && script[0] === '!') {
-
-            var hook = /(\w+)\['tmpInputs'\]\['push'\]\((\w+)\),/;
-            var tokens = script.match(hook);
-            var inputs = tokens[2];
-            var world = script.match(/(\w+)\['players'\]\['updateMesh'\]/)[1];
-            var consts = script.match(/(\w+)\['thirdPX'\],/)[1];
-            var me = script.match(/\((\w+)\|\|window\['spectating'\]\)/)[1];
-            var math = script.match(/\['xDr'\]\+(\w+)\['getDirection'\]/)[1];
-
-            var ttapParams = [me, inputs, world, consts, math];
-
-            // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
-            script = script.replace(hook, (a, b) => {
-                return `${a}window.hrtCheat(${ttapParams }),`
-            });
-
-
-            //Remove clear rect inside overlay render.
-            script = script.replace(/,\w+\['clearRect'\]\(0x0,0x0,\w+,\w+\)/, "");
-
-            //Hook overlay render and force menu to clear frame
-            script = script.replace(/(\w+)\[\'render\'\]\((\w+),\w+,(\w+),\w+,\w+\),/, (a, b, c, d) => `window.menu.draw(window.ctx,true),(window.drawVisuals && window.drawVisuals(${b}.canvas,${c},${d})),${a} `);
-
-            // remove renders
-            script = script.replace(/'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, '!window.options.boxEsp && !window.options.weaponEsp && !window.options.healthEsp && !window.options.healthEsp)');
-
-            // all weapons trails on
-            script = script.replace(/\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
-
-            // color blind mode
-            script = script.replace(/#9eeb56/g, '#00FFFF');
-
-            // no zoom
-            script = script.replace(/,'zoom':.+?(?=,)/g, ",'zoom':1");
-
-            // an extremely old canHit / autowall function creator that doesn't alter canSee
-            // dumb asf but if it still works then should I touch it :thinking:
-            var canSee = script.match(/this\['canSee'\]\=function.+?(?=return null;})/)[0] + "return null;}";
-            var canHit = canSee.replace(/canSee/g, "canHit");
-            canHit = canHit.replace(/\|\|0x0;/, "||0x0;var pcount=0;");
-            var player = canHit.match(/function\(([a-zA-Z0-9]*),/)[1];
-            var object = canHit.match(/([a-zA-Z0-9]*)\=this\['map'\]\['manager'\]\['objects'/)[1];
-            var statement = canHit.match(/\['transparent'\]\){(.+?(?=}))/)[1];
-            var ret = statement.match(/return [a-zA-Z0-9]*/)[0];
-            statement = statement.replace(ret, "{pcount+=1; if(pcount>1&&" + player + ".weapon.pierce>0.8){" + ret + "}}");
-            var search = canHit.match(/return [a-zA-Z0-9]*;\}/)[0];
-            canHit = canHit.replace(search, search + 'else if(' + object + '.active&&' + object + '.penetrable){' + statement + '}')
-            search = canHit.match(/\![a-zA-Z0-9]*\['transparent'\]/)[0];
-            // todo: onhit logic doesn't make sense
-            canHit = canHit.replace(search, "(!" + object + ".penetrable||!" + player + ".weapon.pierce)");
-            script = script.replace(",this['canSee']", "," + canHit + ",this['canSee']");
-
-            TextDecoder.prototype.decode = decode;
-        }
-        return script;
-    }
-
+    // credits for bypass: https://github.com/hrt/
+    var original_Function = Function;
+    Function = new Proxy(Function, handler);
+    hideHook(Function, original_Function);
 })()
