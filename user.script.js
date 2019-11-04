@@ -230,7 +230,8 @@
             // anti retard / version fix
             var version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
             if (version !== "0x10967") {
-                document.write('Version missmatch, wait for hrt');
+                document.write('Version missmatch ( ' + version + ')');
+                window.location.href = atob('aHR0cHM6Ly9naXRodWIuY29tL2hydC93aGVlbGNoYWly');
             }
 
             var hook = /(\w+)\['tmpInputs'\]\['push'\]\((\w+)\),/;
