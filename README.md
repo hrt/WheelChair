@@ -2,6 +2,10 @@
 
 credits: https://github.com/hrt and me only for menu.
 
+# Menu
+If you have any issues with the menu please open a issue and I will fix it. I will **NOT** fix issues with the hack or add options only the menu gets fixed under this fork.
+
+
 # Gold Standard Powered WheelChair
 Christmas is early,
 Note: certain features have been removed but it should still destroy
