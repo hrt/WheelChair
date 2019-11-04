@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Krunker Powered WheelChair
 // @namespace    https://github.com/hrt
-// @version      1.8.2
+// @version      1.8.3
 // @description  WheelChair
 // @author       hrt x ttap x MasterP
 // @match        *://krunker.io/*
