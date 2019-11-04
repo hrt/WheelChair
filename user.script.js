@@ -227,6 +227,12 @@
         if (args.length == 2 && args[1].includes('Seen')) {
             var script = args[1];
 
+            // anti retard / version fix
+            var version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
+            if (version !== "0x10967") {
+                document.write('Version missmatch, wait for hrt');
+            }
+
             var hook = /(\w+)\['tmpInputs'\]\['push'\]\((\w+)\),/;
             var tokens = script.match(hook);
             var inputs = tokens[2];
