@@ -1,4 +1,6 @@
-credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
+# If this alien stuff leaked from area 51 doesnt work and it redirects you there, its because krunker.io got new version and da alien stuff doesnt work there so pls wait for update
+
+Credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
 
 1.8.4
 
