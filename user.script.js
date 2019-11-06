@@ -20,16 +20,16 @@
         var canHit = function(player) {return null == world.canHit(me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3)};
         var normaliseYaw = function(yaw) {return (yaw % Math.PI2 + Math.PI2) % Math.PI2;};
         var dAngleTo = function(x, y, z) {
-            var ty = normaliseYaw(math.getDirection(controls.object.position.z, controls.object.position.x, z, x));
-            var tx = math.getXDir(controls.object.position.x, controls.object.position.y, controls.object.position.z, x, y, z);
+            var ty = normaliseYaw(math.getDir(controls.object.position.z, controls.object.position.x, z, x));
+            var tx = math.getXDire(controls.object.position.x, controls.object.position.y, controls.object.position.z, x, y, z);
             var oy = normaliseYaw(controls.object.rotation.y);
-            var ox = controls.pitchObject.rotation.x;
+            var ox = controls.pchObjc.rotation.x;
             var dYaw = Math.min(Math.abs(ty - oy), Math.abs(ty - oy - Math.PI2), Math.abs(ty - oy + Math.PI2));
             var dPitch = tx - ox;
             return Math.hypot(dYaw, dPitch);
         };
         var calcAngleTo = function(player) {return dAngleTo(e.x3, e.y3 + consts.playerHeight - (consts.headScale + consts.hitBoxPad) / 2 - e.crouchVal * consts.crouchDst, e.z3);};
-        var calcDistanceTo = function(player) {return math.getDistance3D(player.x3, player.y3, player.z3, me.x, me.y, me.z)};
+        var calcDistanceTo = function(player) {return math.getD3D(player.x3, player.y3, player.z3, me.x, me.y, me.z)};
         var isCloseEnough = function(player) {var distance = calcDistanceTo(player); return me.weapon.range >= distance && ("Shotgun" != me.weapon.name || distance < 70) && ("Akimbo Uzi" != me.weapon.name || distance < 100);};
         var haveAmmo = function() {return me.ammos[me.weaponIndex];};
         // runs once
@@ -91,7 +91,7 @@
                     c.lineWidth = 5;
                     c.strokeStyle = 'rgba(255,50,50,1)';
 
-                    var distanceScale = Math.max(.3, 1 - math.getDistance3D(worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
+                    var distanceScale = Math.max(.3, 1 - math.getD3D(worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
                     c.scale(distanceScale, distanceScale);
                     var xScale = scaledWidth / distanceScale;
                     var yScale = scaledHeight / distanceScale;
@@ -182,7 +182,7 @@
 
         // aimbot
         // hrt's big brain got a six pack
-        var ty = controls.object.rotation.y, tx = controls.pitchObject.rotation.x;
+        var ty = controls.object.rotation.y, tx = controls.pchObjc.rotation.x;
         if (closest) {
             var target = closest;
             // No idea why public cheats are using target distance in aimbot calc
@@ -199,8 +199,8 @@
                 inputs[SCOPE] = 1;
             }
 
-            ty = math.getDirection(controls.object.position.z, controls.object.position.x, target.z3, target.x3);
-            tx = math.getXDir(controls.object.position.x, controls.object.position.y, controls.object.position.z, target.x3, y, target.z3);
+            ty = math.getDir(controls.object.position.z, controls.object.position.x, target.z3, target.x3);
+            tx = math.getXDire(controls.object.position.x, controls.object.position.y, controls.object.position.z, target.x3, y, target.z3);
 
             // perfect recoil control..?
             tx -= .3 * me.recoilAnimY;
@@ -229,9 +229,9 @@
 
             // anti retard / version fix
             var version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
-            if (version !== "0x10967") {
-                document.write('Version missmatch ( ' + version + ')');
-                window.location.href = atob('aHR0cHM6Ly9naXRodWIuY29tL2hydC93aGVlbGNoYWly');
+            if (version !== "0x8d71") {
+                window[atob('ZG9jdW1lbnQ=')][atob('d3JpdGU=')](atob('VmVyc2lvbiBtaXNzbWF0Y2gg') + version);
+                window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
             }
 
             var hook = /(\w+)\['tmpInputs'\]\['push'\]\((\w+)\),/;
@@ -240,7 +240,7 @@
             var world = script.match(/(\w+)\['players'\]\['updateMesh'\]/)[1];
             var consts = script.match(/(\w+)\['thirdPX'\],/)[1];
             var me = script.match(/\((\w+)\|\|window\['spectating'\]\)/)[1];
-            var math = script.match(/\['xDr'\]\+(\w+)\['getDirection'\]/)[1];
+            var math = script.match(/\['xDr'\]\+(\w+)\['getDir'\]/)[1];
 
             var ttapParams = [me, inputs, world, consts, math];
 
