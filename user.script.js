@@ -229,7 +229,7 @@
 
             // anti retard / version fix
             var version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
-            if (version !== "0x8d71") {
+            if (version !== "0x14d41") {
                 window[atob('ZG9jdW1lbnQ=')][atob('d3JpdGU=')](atob('VmVyc2lvbiBtaXNzbWF0Y2gg') + version);
                 window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
             }
