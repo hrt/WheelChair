@@ -1,7 +1,8 @@
 credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
 
 1.8.6
-`use with caution`
+
+Patching public cheats is extremely easy so always test before use - and don't use accounts you can't afford to lose
 
 # Gold Standard WheelChair
 Christmas is early,
