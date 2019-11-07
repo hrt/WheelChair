@@ -1,6 +1,6 @@
 credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
 
-1.8.5
+1.8.6
 
 # Gold Standard WheelChair
 Christmas is early,
