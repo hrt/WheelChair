@@ -1,4 +1,4 @@
-# 1.8.5
+# 1.8.6
 
 credits: https://github.com/hrt and me only for menu.
 
