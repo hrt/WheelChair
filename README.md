@@ -1,4 +1,4 @@
-# 1.8.6
+# Outdated
 
 credits: https://github.com/hrt and me only for menu.
 
