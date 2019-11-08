@@ -1,11 +1,11 @@
-credits: entirely me and whoever wrote the krunker.io game logic I've been "reversing" from
+1.8.6 (oytdated)
 
-1.8.6
+Will update for 1.8.7 later..
 
-Patching public cheats is extremely easy so always test before use - and don't use accounts you can't afford to lose
+Just like to point out that if you're cheating against legit players, you are scum.
+
 
 # Gold Standard WheelChair
-Christmas is early,
 Note: certain features have been removed but it should still destroy
 
 1. Install tamper monkey
