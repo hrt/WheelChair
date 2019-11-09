@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Krunker Powered WheelChair
 // @namespace    https://github.com/hrt
-// @version      1.8.6
+// @version      1.8.8
 // @description  WheelChair
 // @author       hrt x ttap x MasterP
 // @match        *://krunker.io/*
 // @run-at       document-start
 // @require      https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js
-// @require      https://krunkr.com/assets/js/canvas.gui.js?ver=0.7
+// @require      https://krunkr.com/assets/js/canvas.gui.js?ver=0.6
 // @grant        none
 // ==/UserScript==
 WebFont.load({
@@ -16,6 +16,29 @@ WebFont.load({
     }
 });
 (function () {
+    const replace = String.prototype.replace;
+    function conceal_function(original_Function, hook_Function) {
+        var anti_map = [];
+        var original_toString = Function.prototype.toString;
+
+        function hook_toString(...args) {
+            for (var i = 0; i < anti_map.length; i++) {
+                if (anti_map[i].from === this) {
+                    return anti_map[i].to;
+                }
+            }
+            return original_toString.apply(this, args);
+        }
+        anti_map.push({
+            from: hook_Function,
+            to: original_Function.toString()
+        });
+        anti_map.push({
+            from: hook_toString,
+            to: original_toString.toString()
+        });
+        Function.prototype.toString = hook_toString;
+    };
     const options = {
         aimbot: true,
         silentAim: false,
@@ -27,8 +50,6 @@ WebFont.load({
         chams: true,
         autoReload: true,
         autoJump: true,
-        orgNameTags: false,
-        aimThroughWalls: false,
         chamsColorStr: "rgba(255,0,0,1)",
         chamsRed: 255,
         chamsBlue: 0,
@@ -118,48 +139,24 @@ WebFont.load({
         }
     }
 
-
-    const replace = String.prototype.replace;
-    var hideHook = function (fn, oFn) {
-        fn.toString = oFn.toString.bind(oFn);
-    }
     const menu = new MyGUI(false, 0, 0, 250, 250, styles, "wheelchair", 1)
+
     menu.remember(window.options)
     window.menu = menu;
     const poweredWheelAimbot = menu.addFolder("Aimbot", true)
     const poweredWheelVisuals = menu.addFolder("Visuals", true)
+    const poweredWheelOther = menu.addFolder("Other", true)
+
     poweredWheelAimbot.add("Aimbot", window.options, "aimbot", "Check")
     poweredWheelAimbot.add("Silent Aim", window.options, "silentAim", "Check")
     poweredWheelAimbot.add("Auto Reload", window.options, "autoReload", "Check")
-    poweredWheelAimbot.add("Aim Through Walls", window.options, "aimThroughWalls", "Check")
-    poweredWheelVisuals.add("Game Esp", window.options, "orgNameTags", "Check")
-        .onChange((val) => {
-            if (val) {
-                window.options.nameEsp = false;
-                window.options.boxEsp = false;
-                window.options.weaponEsp = false;
-                window.options.healthEsp = false;
-            }
-        })
     poweredWheelVisuals.add("Name Esp", window.options, "nameEsp", "Check")
-        .onChange((val) => {
-            if (val && window.options.orgNameTags) window.options.orgNameTags = !window.options.orgNameTags
-        })
     poweredWheelVisuals.add("Box Esp", window.options, "boxEsp", "Check")
-        .onChange((val) => {
-            if (val && window.options.orgNameTags) window.options.orgNameTags = !window.options.orgNameTags
-        })
     poweredWheelVisuals.add("Weapon Esp", window.options, "weaponEsp", "Check")
-        .onChange((val) => {
-            if (val && window.options.orgNameTags) window.options.orgNameTags = !window.options.orgNameTags
-        })
     poweredWheelVisuals.add("Health Esp", window.options, "healthEsp", "Check")
-        .onChange((val) => {
-            if (val && window.options.orgNameTags) window.options.orgNameTags = !window.options.orgNameTags
-        })
     poweredWheelVisuals.add("Chams", window.options, "chams", "Check")
     poweredWheelVisuals.add("Box Color", window.options, "boxColor", "Color")
-
+    poweredWheelOther.add("Auto Jump", window.options, "autoJump", "Check")
     poweredWheelVisuals.add("Chams Color", window.options, "chamsColorStr", "Color")
         .onChange((val) => {
             const {
@@ -171,8 +168,27 @@ WebFont.load({
             window.options.chamsGreen = (g - 0) / (255 - 0)
             window.options.chamsBlue = (b - 0) / (255 - 0)
         })
-
-    window.hrtCheat = function (me, inputs, world, consts, math) {
+    // no longer public offset finding
+    var inputs = "cEE";
+    var world = "cEy";
+    var consts = "cDv";
+    var me = "cEA";
+    var math = "cEp";
+    var hrtCheat = function (me, inputs, world, consts, math, conceal_function) {
+        /* Wanna update yourself? Write a script which finds these */
+        var canSee = "BwftfwWS";
+        var getDir = "ujHYahTl";
+        var getXDire = "SbPUccYE";
+        var getDistance = "kwpNBTcj";
+        var getD3D = "OmPMwAzs";
+        var pchObjc = "vKPtJVFI";
+        var objInstances = "eKoEYKcC";
+        var playerScale = "playerScale";
+        var isYou = "OFnPTTpe";
+        var recoilAnimY = "psKrGopm";
+        var playerHeight = "playerHeight";
+        var mouseDownL = "sMTFGWrl";
+        var mouseDownR = "hhLaRzBY";
         var controls = world.controls;
         const SHOOT = 5,
             SCOPE = 6,
@@ -184,32 +200,32 @@ WebFont.load({
             return !me.team || player.team != me.team
         };
         var canHit = function (player) {
-            return null == (window.options.aimThroughWalls ? world.canHit(me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3) : world.canSee(me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3))
+            return null == world[canSee](me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3)
         };
         var normaliseYaw = function (yaw) {
             return (yaw % Math.PI2 + Math.PI2) % Math.PI2;
         };
         var dAngleTo = function (x, y, z) {
-            var ty = normaliseYaw(math.getDir(controls.object.position.z, controls.object.position.x, z, x));
-            var tx = math.getXDire(controls.object.position.x, controls.object.position.y, controls.object.position.z, x, y, z);
+            var ty = normaliseYaw(math[getDir](controls.object.position.z, controls.object.position.x, z, x));
+            var tx = math[getXDire](controls.object.position.x, controls.object.position.y, controls.object.position.z, x, y, z);
             var oy = normaliseYaw(controls.object.rotation.y);
-            var ox = controls.pchObjc.rotation.x;
+            var ox = controls[pchObjc].rotation.x;
             var dYaw = Math.min(Math.abs(ty - oy), Math.abs(ty - oy - Math.PI2), Math.abs(ty - oy + Math.PI2));
             var dPitch = tx - ox;
             return Math.hypot(dYaw, dPitch);
         };
         var calcAngleTo = function (player) {
-            return dAngleTo(e.x3, e.y3 + consts.playerHeight - (consts.headScale + consts.hitBoxPad) / 2 - e.crouchVal * consts.crouchDst, e.z3);
+            return dAngleTo(e.x3, e.y3 + consts[playerHeight] - (consts.headScale + consts.hitBoxPad) / 2 - e.crouchVal * consts.crouchDst, e.z3);
         };
         var calcDistanceTo = function (player) {
-            return math.getD3D(player.x3, player.y3, player.z3, me.x, me.y, me.z)
+            return math[getD3D](player.x3, player.y3, player.z3, me.x, me.y, me.z)
         };
         var isCloseEnough = function (player) {
             var distance = calcDistanceTo(player);
             return me.weapon.range >= distance && ("Shotgun" != me.weapon.name || distance < 70) && ("Akimbo Uzi" != me.weapon.name || distance < 100);
         };
         var haveAmmo = function () {
-            return me.ammos[me.weaponIndex];
+            return !(me.ammos[me.weaponIndex] !== undefined && me.ammos[me.weaponIndex] == 0);
         };
         // runs once
         if (!window.init) {
@@ -217,18 +233,18 @@ WebFont.load({
             /*************************************/
             /* crimpeek / faster bullets removed */
             /*************************************/
-            window.drawVisuals = function (c, scalingFactor, perspective) {
-                if (!window.ctx) {
-                    window.ctx = c.getContext("2d")
-                }
-                c = window.ctx;
+            var drawVisuals = function (c) {
+                if (!arguments.callee.caller.caller.arguments[0] || !arguments.callee.caller.caller.arguments[2]) return;
+                var scalingFactor = arguments.callee.caller.caller.arguments[0];
+                var perspective = arguments.callee.caller.caller.arguments[2];
+                if (!perspective && !perspective.camera) return;
                 var scaledWidth = c.canvas.width / scalingFactor;
                 var scaledHeight = c.canvas.height / scalingFactor;
                 var worldPosition = perspective.camera.getWorldPosition();
                 for (var i = 0; i < world.players.list.length; i++) {
                     var player = world.players.list[i];
                     var e = players[i];
-                    if (e.isYou || !e.active || !e.objInstances || !isEnemy(e)) {
+                    if (e[isYou] || !e.active || !e[objInstances] || !isEnemy(e)) {
                         continue;
                     }
                     // find min x, max x, min y, max y
@@ -241,10 +257,10 @@ WebFont.load({
                     for (var j = -1; !br && j < 2; j += 2) {
                         for (var k = -1; !br && k < 2; k += 2) {
                             for (var l = 0; !br && l < 2; l++) {
-                                var position = e.objInstances.position.clone();
-                                position.x += j * consts.playerScale;
-                                position.z += k * consts.playerScale;
-                                position.y += l * (consts.playerHeight - e.crouchVal * consts.crouchDst);
+                                var position = e[objInstances].position.clone();
+                                position.x += j * consts[playerScale];
+                                position.z += k * consts[playerScale];
+                                position.y += l * (consts[playerHeight] - e.crouchVal * consts.crouchDst);
                                 if (!perspective.frustum.containsPoint(position)) {
                                     br = true;
                                     break;
@@ -269,11 +285,9 @@ WebFont.load({
 
 
                     c.save();
-                    c.scale(scalingFactor, scalingFactor)
                     // perfect box esp
 
-
-                    var distanceScale = Math.max(.3, 1 - math.getD3D(worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
+                    var distanceScale = Math.max(.3, 1 - math[getD3D](worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
                     c.scale(distanceScale, distanceScale);
                     var xScale = scaledWidth / distanceScale;
                     var yScale = scaledHeight / distanceScale;
@@ -346,6 +360,37 @@ WebFont.load({
                     }
                 }
             }
+            // render all the visuals
+            var original_clearRect = CanvasRenderingContext2D.prototype.clearRect;
+            var hook_clearRect = function (...args) {
+
+                if (arguments.length === 5) {
+                    original_clearRect.apply(this, args);
+                } else {
+                    drawVisuals(this);
+
+                }
+
+            };
+            var original_scale = CanvasRenderingContext2D.prototype.scale;
+            var hook_scale = function (...args) {
+
+                original_scale.apply(this, args);
+                //                console.log(arguments[0])
+                if (uiBase.style.transform.match(/scale\((.+)\)/)[1] === arguments[0].toFixed(3)) {
+                    this.save();
+                    this.setTransform(1, 0, 0, 1, 0, 0);
+                    window.menu.draw(this, true)
+                    this.restore()
+                }
+
+            };
+            conceal_function(original_clearRect, hook_clearRect);
+            conceal_function(original_scale, original_scale);
+            CanvasRenderingContext2D.prototype.scale = hook_scale;
+
+            CanvasRenderingContext2D.prototype.clearRect = hook_clearRect;
+
         }
 
         // auto reload
@@ -361,27 +406,19 @@ WebFont.load({
         if (!window.options.aimbot) return;
         for (var i = 0; me.active && i < players.length; i++) {
             var e = players[i];
-            if (e.isYou || !e.active || !e.objInstances || !isEnemy(e)) {
+            if (e[isYou] || !e.active || !e[objInstances] || !isEnemy(e)) {
                 continue;
             }
 
-            // experimental prediction
-            // just use normal xyz values instead for potentially better aim :shrug:
-            var scale = Math.min(1.6, e.dt / (consts.serverSendRate * consts.interpolation));
-            // this check is so that we don't shoot people that just respawn
-            if (math.getD3D(e.x2, e.y2, e.z2, e.x, e.y, e.z) < 100) {
-                e.x3 = e.x + (e.x2 - e.x) * scale;
-                e.y3 = e.y + (e.y2 - e.y) * scale;
-                e.z3 = e.z + (e.z2 - e.z) * scale;
-            } else {
-                e.x3 = e.x;
-                e.y3 = e.y;
-                e.z3 = e.z;
-            }
+            // experimental prediction removed - otherwise they'd be in x3 y3 z3
+            e.x3 = e.x;
+            e.y3 = e.y;
+            e.z3 = e.z;
 
             if (!isCloseEnough(e) || !canHit(e)) {
                 continue;
             }
+
 
             var angle = calcAngleTo(e);
             if (angle < closestAngle) {
@@ -390,15 +427,17 @@ WebFont.load({
             }
         }
 
+
+
         // aimbot
         // hrt's big brain got a six pack
         var ty = controls.object.rotation.y,
-            tx = controls.pchObjc.rotation.x;
+            tx = controls[pchObjc].rotation.x;
         if (closest) {
             var target = closest;
             // No idea why public cheats are using target distance in aimbot calc
             // No idea why it's so difficult for people to not use magic numbers here
-            var y = target.y3 + consts.playerHeight - (consts.headScale /* + consts.hitBoxPad*/ ) / 2 - target.crouchVal * consts.crouchDst;
+            var y = target.y3 + consts[playerHeight] - (consts.headScale /* + consts.hitBoxPad*/ ) / 2 - target.crouchVal * consts.crouchDst;
             if (me.weapon.nAuto && me.didShoot) {
                 inputs[SHOOT] = 0;
             } else if (!me.aimVal) { // me.recoilAnimY < 0.1 - if you want to shoot more slower and perhaps more accurately
@@ -410,14 +449,14 @@ WebFont.load({
                 inputs[SCOPE] = 1;
             }
 
-            ty = math.getDir(controls.object.position.z, controls.object.position.x, target.z3, target.x3);
-            tx = math.getXDire(controls.object.position.x, controls.object.position.y, controls.object.position.z, target.x3, y, target.z3);
+            ty = math[getDir](controls.object.position.z, controls.object.position.x, target.z3, target.x3);
+            tx = math[getXDire](controls.object.position.x, controls.object.position.y, controls.object.position.z, target.x3, y, target.z3);
 
             // perfect recoil control..?
-            tx -= .3 * me.recoilAnimY;
+            tx -= .3 * me[recoilAnimY];
         } else {
-            inputs[SHOOT] = controls.mouseDownL;
-            inputs[SCOPE] = controls.mouseDownR;
+            inputs[SHOOT] = controls[mouseDownL];
+            inputs[SCOPE] = controls[mouseDownR];
             // inputs[CROUCH] = controls.keys[controls.crouchKey] * 1; // auto crouch
         }
 
@@ -428,7 +467,7 @@ WebFont.load({
         inputs[yDr] = newY;
         if (!window.options.silentAim) {
             controls.object.rotation.y = newY
-            controls.pchObjc.rotation.x = newX
+            controls[pchObjc].rotation.x = newX
         }
 
     }
@@ -436,64 +475,32 @@ WebFont.load({
     // big up my boy hrt and ttap for releasing
     const handler = {
         construct(target, args) {
-            if (args.length == 2 && args[1].includes('Seen')) {
+            if (args.length == 2 && args[1].length > 1337) {
                 var script = args[1];
 
-                // anti retard / version fix
+                // anti anti chet
                 var version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
-                if (version !== "0x14d41") {
-                    document.write('Version missmatch, wait for hrt');
-                    document.write('Version missmatch ( ' + version + ')');
-                    window.location.href = atob('aHR0cHM6Ly9naXRodWIuY29tL2hydC93aGVlbGNoYWly');
+                if (version !== "0x16589") {
+                    window[atob('ZG9jdW1lbnQ=')][atob('d3JpdGU=')](atob('VmVyc2lvbiBtaXNzbWF0Y2gg') + version);
+                    window[atob('bG9jYX' + 'Rpb24' + '=')][atob('aHJ' + 'lZg=' + '=')] = atob('aHR0cHM6' + 'Ly9naXRodWIuY2' + '9tL2hydC93aGVlb' + 'GNoYWly');
                 }
 
-                var hook = /(\w+)\['tmpInputs'\]\['push'\]\((\w+)\),/;
+                var hook = /(\w+)\['tmpInpts'\]\['push'\]\((\w+)\),/;
                 var tokens = script.match(hook);
-                var inputs = tokens[2];
-                var world = script.match(/(\w+)\['players'\]\['updateMesh'\]/)[1];
-                var consts = script.match(/(\w+)\['thirdPX'\],/)[1];
-                var me = script.match(/\((\w+)\|\|window\['spectating'\]\)/)[1];
-                var math = script.match(/\['xDr'\]\+(\w+)\['getDir'\]/)[1];
-
-                var ttapParams = [me, inputs, world, consts, math];
+                var ttapParams = [me, inputs, world, consts, math, conceal_function.toString()];
 
                 // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
                 script = replace.call(script, hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
 
-                //Remove clear rect inside overlay render.
-                script = replace.call(script, /,\w+\['clearRect'\]\(0x0,0x0,\w+,\w+\)/, "");
-
-                // remove renders
-                script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, '!window.options.boxEsp && !window.options.weaponEsp && !window.options.healthEsp && !window.options.healthEsp)');
-
-                //Hook overlay render and force menu to clear frame
-                script = replace.call(script, /(\w+)\[\'render\'\]\((\w+),\w+,(\w+),\w+,\w+\),/, (a, b, c, d) => `window.menu.draw(${b}.canvas,true),(window.drawVisuals && window.drawVisuals(${b}.canvas,${c},${d})),${a} `);
-
                 // all weapons trails on
-                script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
+                //script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
 
                 // color blind mode
-                script = replace.call(script, /#9eeb56/g, '#00FFFF');
+                //script = replace.call(script, /#9eeb56/g, '#00FFFF');
 
                 // no zoom
-                script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
+                //script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
 
-                // an extremely old canHit / autowall function creator that doesn't alter canSee
-                // dumb asf but if it still works then should I touch it :thinking:
-                var canSee = script.match(/this\['canSee'\]\=function.+?(?=return null;})/)[0] + "return null;}";
-                var canHit = replace.call(canSee, /canSee/g, "canHit");
-                canHit = replace.call(canHit, /\|\|0x0;/, "||0x0;var pcount=0;");
-                var player = canHit.match(/function\(([a-zA-Z0-9]*),/)[1];
-                var object = canHit.match(/([a-zA-Z0-9]*)\=this\['map'\]\['manager'\]\['objects'/)[1];
-                var statement = canHit.match(/\['transparent'\]\){(.+?(?=}))/)[1];
-                var ret = statement.match(/return [a-zA-Z0-9]*/)[0];
-                statement = replace.call(statement, ret, "{pcount+=1; if(pcount>1&&" + player + ".weapon.pierce>0.8){" + ret + "}}");
-                var search = canHit.match(/return [a-zA-Z0-9]*;\}/)[0];
-                canHit = replace.call(canHit, search, search + 'else if(' + object + '.active&&' + object + '.penetrable){' + statement + '}')
-                search = canHit.match(/\![a-zA-Z0-9]*\['transparent'\]/)[0];
-                // todo: onhit logic doesn't make sense
-                canHit = replace.call(canHit, search, "(!" + object + ".penetrable||!" + player + ".weapon.pierce)");
-                script = replace.call(script, ",this['canSee']", "," + canHit + ",this['canSee']");
 
                 args[1] = script;
             }
@@ -502,6 +509,7 @@ WebFont.load({
     };
     // credits for bypass: https://github.com/hrt/
     var original_Function = Function;
-    Function = new Proxy(Function, handler);
-    hideHook(Function, original_Function);
+    var hook_Function = new Proxy(Function, handler);
+    conceal_function(original_Function, hook_Function);
+    Function = hook_Function;
 })()
