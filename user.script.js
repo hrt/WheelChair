@@ -232,8 +232,8 @@
             // perfect recoil control..?
             tx -= .3 * me[recoilAnimY];
         } else {
-            inputs[SHOOT] = controls.mouseDownL;
-            inputs[SCOPE] = controls.mouseDownR;
+            inputs[SHOOT] = controls[mouseDownL];
+            inputs[SCOPE] = controls[mouseDownR];
             // inputs[CROUCH] = controls.keys[controls.crouchKey] * 1; // auto crouch
         }
 
