@@ -12,6 +12,23 @@
 (function(){
     const replace = String.prototype.replace;
 
+    function conceal(original_Function, hook_Function) {
+        var anti_map = [];
+        var original_toString = Function.prototype.toString;
+        function hook_toString(...args) {
+            for (var i = 0; i < anti_map.length; i++) {
+                if (anti_map[i].from === this) {
+                    return anti_map[i].to;
+                }
+            }
+            return original_toString.apply(this, args);
+        }
+
+        anti_map.push({from: hook_Function, to: original_Function.toString()});
+        anti_map.push({from: hook_toString, to: original_toString.toString()});
+        Function.prototype.toString = hook_toString;
+    };
+
     // no longer public offset finding
     var inputs = "cEE";
     var world = "cEy";
@@ -19,7 +36,7 @@
     var me = "cEA";
     var math = "cEp";
 
-    var hrtCheat = function(me, inputs, world, consts, math) {
+    var hrtCheat = function(me, inputs, world, consts, math, conceal) {
         /* Wanna update yourself? Write a script which finds these */
         var canSee = "BwftfwWS";
         var getDir = "ujHYahTl";
@@ -173,10 +190,13 @@
             };
             // render all the visuals
             var original_clearRect = CanvasRenderingContext2D.prototype.clearRect;
-            CanvasRenderingContext2D.prototype.clearRect = function(...args){
+            var hook_clearRect = function(...args) {
                 original_clearRect.apply(this, args);
                 drawVisuals(this);
             };
+
+            conceal(original_clearRect, hook_clearRect);
+            CanvasRenderingContext2D.prototype.clearRect = hook_clearRect;
         }
 
         // target selector - based on closest to aim
@@ -263,22 +283,22 @@
 
             var hook = /(\w+)\['tmpInpts'\]\['push'\]\((\w+)\),/;
             var tokens = script.match(hook);
-            var ttapParams = [me, inputs, world, consts, math];
+            var ttapParams = [me, inputs, world, consts, math, conceal.toString()];
 
             // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
             script = replace.call(script, hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
 
-            // remove renders
-            script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
+            // // remove renders
+            // script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
 
-            // all weapons trails on
-            script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
+            // // all weapons trails on
+            // script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
 
-            // color blind mode
-            script = replace.call(script, /#9eeb56/g, '#00FFFF');
+            // // color blind mode
+            // script = replace.call(script, /#9eeb56/g, '#00FFFF');
 
-            // no zoom
-            script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
+            // // no zoom
+            // script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
 
             args[1] = script;
         }
@@ -288,10 +308,7 @@
 
     // credits for bypass: https://github.com/hrt/
     var original_Function = Function;
-    Function = new Proxy(Function, handler);
-    var hideHook = function(fn, oFn) {
-        fn.toString = oFn.toString.bind(oFn);
-        fn.toString.toString = oFn.toString.toString.bind(oFn.toString.toString);
-    };
-    hideHook(Function, original_Function);
+    var hook_Function = new Proxy(Function, handler);
+    conceal(original_Function, hook_Function);
+    Function = hook_Function;
 })()
