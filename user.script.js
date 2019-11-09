@@ -53,7 +53,7 @@
         var calcAngleTo = function(player) {return dAngleTo(e.x3, e.y3 + consts[playerHeight] - (consts.headScale + consts.hitBoxPad) / 2 - e.crouchVal * consts.crouchDst, e.z3);};
         var calcDistanceTo = function(player) {return math[getD3D](player.x3, player.y3, player.z3, me.x, me.y, me.z)};
         var isCloseEnough = function(player) {var distance = calcDistanceTo(player); return me.weapon.range >= distance && ("Shotgun" != me.weapon.name || distance < 70) && ("Akimbo Uzi" != me.weapon.name || distance < 100);};
-        var haveAmmo = function() {return me.ammos[me.weaponIndex];};
+        var haveAmmo = function() {return !(me.ammos[me.weaponIndex] !== undefined && me.ammos[me.weaponIndex] == 0);};
         // runs once
         if (!window.init) {
             window.init = true;
@@ -242,7 +242,7 @@
         inputs[yDr] = (ty % Math.PI2).round(3);
 
         // auto reload
-        controls.keys[controls.reloadKey] = !haveAmmo();
+        controls.keys[controls.reloadKey] = !haveAmmo() * 1;
 
         inputs[JUMP] = (controls.keys[controls.jumpKey] && !me.didJump) * 1;
     }
