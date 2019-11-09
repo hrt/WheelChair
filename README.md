@@ -2,7 +2,7 @@
 
 If you DC try clearing cache/cookies. Pretty sure it's a krunker issue
 
-Just like to point out that if you're cheating against legit players, you are scum.
+Be a cripple, use a WheelChair
 
 
 # Gold Standard WheelChair
