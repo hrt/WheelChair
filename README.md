@@ -1,4 +1,6 @@
-# Outdated
+# 1.8.8
+
+**If you DC turn off ad blockers**
 
 credits: https://github.com/hrt and me only for menu.
 
