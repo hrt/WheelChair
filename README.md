@@ -1,6 +1,6 @@
-1.8.6 (oytdated)
+1.8.8
 
-Will update for 1.8.7 later..
+
 
 Just like to point out that if you're cheating against legit players, you are scum.
 
