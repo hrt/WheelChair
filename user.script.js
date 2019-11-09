@@ -12,7 +12,7 @@
 (function(){
     const replace = String.prototype.replace;
 
-    function conceal(original_Function, hook_Function) {
+    function conceal_function(original_Function, hook_Function) {
         var anti_map = [];
         var original_toString = Function.prototype.toString;
         function hook_toString(...args) {
@@ -36,7 +36,7 @@
     var me = "cEA";
     var math = "cEp";
 
-    var hrtCheat = function(me, inputs, world, consts, math, conceal) {
+    var hrtCheat = function(me, inputs, world, consts, math, conceal_function) {
         /* Wanna update yourself? Write a script which finds these */
         var canSee = "BwftfwWS";
         var getDir = "ujHYahTl";
@@ -195,7 +195,7 @@
                 drawVisuals(this);
             };
 
-            conceal(original_clearRect, hook_clearRect);
+            conceal_function(original_clearRect, hook_clearRect);
             CanvasRenderingContext2D.prototype.clearRect = hook_clearRect;
         }
 
@@ -283,22 +283,25 @@
 
             var hook = /(\w+)\['tmpInpts'\]\['push'\]\((\w+)\),/;
             var tokens = script.match(hook);
-            var ttapParams = [me, inputs, world, consts, math, conceal.toString()];
+            var ttapParams = [me, inputs, world, consts, math, conceal_function.toString()];
 
             // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
             script = replace.call(script, hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
 
-            // // remove renders
-            // script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
+            // remove renders
+            script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
 
-            // // all weapons trails on
-            // script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
+            // all weapons trails on
+            script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
 
-            // // color blind mode
-            // script = replace.call(script, /#9eeb56/g, '#00FFFF');
+            // color blind mode
+            script = replace.call(script, /#9eeb56/g, '#00FFFF');
 
-            // // no zoom
-            // script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
+            // no zoom
+            script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
+
+            script = replace.call(script, /\['send']\('rt'\)/, "['send']('c')");
+
 
             args[1] = script;
         }
@@ -309,6 +312,6 @@
     // credits for bypass: https://github.com/hrt/
     var original_Function = Function;
     var hook_Function = new Proxy(Function, handler);
-    conceal(original_Function, hook_Function);
+    conceal_function(original_Function, hook_Function);
     Function = hook_Function;
 })()
