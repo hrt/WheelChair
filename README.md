@@ -1,6 +1,7 @@
 1.8.8
 
-If you DC turn off ad blockers. If you're using brave - you need to disable it.
+If you DC turn off ad blockers
+
 
 Become a cripple, use a WheelChair...
 
