@@ -29,46 +29,35 @@
         Function.prototype.toString = hook_toString;
     };
 
-    // no longer public offset finding
-    var inputs = "cEE";
-    var world = "cEy";
-    var consts = "cDv";
-    var me = "cEA";
-    var math = "cEp";
-
-    var hrtCheat = function(me, inputs, world, consts, math, conceal_function) {
-        /* Wanna update yourself? Write a script which finds these */
-        var canSee = "BwftfwWS";
-        var getDir = "ujHYahTl";
-        var getXDire = "SbPUccYE";
-        var getDistance = "kwpNBTcj";
-        var getD3D = "OmPMwAzs";
-        var pchObjc = "vKPtJVFI";
-        var objInstances = "eKoEYKcC";
-        var playerScale = "playerScale";
-        var isYou = "OFnPTTpe";
-        var recoilAnimY = "psKrGopm";
-        var playerHeight = "playerHeight";
-        var mouseDownL = "sMTFGWrl";
-        var mouseDownR = "hhLaRzBY";
-
+    var hrtCheat = function(me, inputs, world, consts, math, canSee, pchObjc, objInstances, isYou, recoilAnimY, mouseDownL, mouseDownR, conceal_function) {
         var controls = world.controls;
         const SHOOT = 5, SCOPE = 6, xDr = 3, yDr = 2, JUMP = 7, CROUCH = 8;
         var isEnemy = function(player) {return !me.team || player.team != me.team};
         var canHit = function(player) {return null == world[canSee](me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3)};
         var normaliseYaw = function(yaw) {return (yaw % Math.PI2 + Math.PI2) % Math.PI2;};
+        var getDir = function(ber, bes, bet, bev) {
+            return Math["atan2"](bes - bev, ber - bet);
+        };
+        var getD3D = function(ber, bes, bet, bev, bew, bf3) {
+            var bf4 = ber - bev, bf5 = bes - bew, bf6 = bet - bf3;
+            return Math["sqrt"](bf4 * bf4 + bf5 * bf5 + bf6 * bf6);
+        }
+        var getXDire = function(bes, bet, bev, bew, bfh, bfi) {
+            var bfj = Math["abs"](bet - bfh), bfk = getD3D(bes, bet, bev, bew, bfh, bfi);
+            return Math["asin"](bfj / bfk) * (bet > bfh ? -1 : 1);
+        }
 
         var dAngleTo = function(x, y, z) {
-            var ty = normaliseYaw(math[getDir](controls.object.position.z, controls.object.position.x, z, x));
-            var tx = math[getXDire](controls.object.position.x, controls.object.position.y, controls.object.position.z, x, y, z);
+            var ty = normaliseYaw(getDir(controls.object.position.z, controls.object.position.x, z, x));
+            var tx = getXDire(controls.object.position.x, controls.object.position.y, controls.object.position.z, x, y, z);
             var oy = normaliseYaw(controls.object.rotation.y);
             var ox = controls[pchObjc].rotation.x;
             var dYaw = Math.min(Math.abs(ty - oy), Math.abs(ty - oy - Math.PI2), Math.abs(ty - oy + Math.PI2));
             var dPitch = tx - ox;
             return Math.hypot(dYaw, dPitch);
         };
-        var calcAngleTo = function(player) {return dAngleTo(e.x3, e.y3 + consts[playerHeight] - (consts.headScale + consts.hitBoxPad) / 2 - e.crouchVal * consts.crouchDst, e.z3);};
-        var calcDistanceTo = function(player) {return math[getD3D](player.x3, player.y3, player.z3, me.x, me.y, me.z)};
+        var calcAngleTo = function(player) {return dAngleTo(e.x3, e.y3 + consts.playerHeight - (consts.headScale + consts.hitBoxPad) / 2 - e.crouchVal * consts.crouchDst, e.z3);};
+        var calcDistanceTo = function(player) {return getD3D(player.x3, player.y3, player.z3, me.x, me.y, me.z)};
         var isCloseEnough = function(player) {var distance = calcDistanceTo(player); return me.weapon.range >= distance && ("Shotgun" != me.weapon.name || distance < 70) && ("Akimbo Uzi" != me.weapon.name || distance < 100);};
         var haveAmmo = function() {return !(me.ammos[me.weaponIndex] !== undefined && me.ammos[me.weaponIndex] == 0);};
         // runs once
@@ -98,9 +87,9 @@
                         for (var k = -1; !br && k < 2; k+=2) {
                             for (var l = 0; !br && l < 2; l++) {
                                 var position = e[objInstances].position.clone();
-                                position.x += j * consts[playerScale];
-                                position.z += k * consts[playerScale];
-                                position.y += l * (consts[playerHeight] - e.crouchVal * consts.crouchDst);
+                                position.x += j * consts.playerScale;
+                                position.z += k * consts.playerScale;
+                                position.y += l * (consts.playerHeight - e.crouchVal * consts.crouchDst);
                                 if (!perspective.frustum.containsPoint(position)) {
                                     br = true;
                                     break;
@@ -130,7 +119,7 @@
                     c.lineWidth = 5;
                     c.strokeStyle = 'rgba(255,50,50,1)';
 
-                    var distanceScale = Math.max(.3, 1 - math[getD3D](worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
+                    var distanceScale = Math.max(.3, 1 - getD3D(worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
                     c.scale(distanceScale, distanceScale);
                     var xScale = scaledWidth / distanceScale;
                     var yScale = scaledHeight / distanceScale;
@@ -234,7 +223,7 @@
             var target = closest;
             // No idea why public cheats are using target distance in aimbot calc
             // No idea why it's so difficult for people to not use magic numbers here
-            var y = target.y3 + consts[playerHeight] - (consts.headScale/* + consts.hitBoxPad*/) / 2 - target.crouchVal * consts.crouchDst;
+            var y = target.y3 + consts.playerHeight - (consts.headScale/* + consts.hitBoxPad*/) / 2 - target.crouchVal * consts.crouchDst;
             if (me.weapon.nAuto && me.didShoot) {
                 inputs[SHOOT] = 0;
             } else if (!me.aimVal) { // me.recoilAnimY < 0.1 - if you want to shoot more slower and perhaps more accurately
@@ -246,8 +235,8 @@
                 inputs[SCOPE] = 1;
             }
 
-            ty = math[getDir](controls.object.position.z, controls.object.position.x, target.z3, target.x3);
-            tx = math[getXDire](controls.object.position.x, controls.object.position.y, controls.object.position.z, target.x3, y, target.z3);
+            ty = getDir(controls.object.position.z, controls.object.position.x, target.z3, target.x3);
+            tx = getXDire(controls.object.position.x, controls.object.position.y, controls.object.position.z, target.x3, y, target.z3);
 
             // perfect recoil control..?
             tx -= .3 * me[recoilAnimY];
@@ -281,12 +270,12 @@
                 window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
             }
 
-            var hook = /(\w+)\['tmpInpts'\]\['push'\]\((\w+)\),/;
-            var tokens = script.match(hook);
-            var ttapParams = [me, inputs, world, consts, math, conceal_function.toString()];
+            var hook_location = script.match(/(!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w+1\)\),\w+\['\w+'\]=\w+0,\w+\['\w+'\]=\w+0,!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),)\w+\['\w+'\]\(\w+,\w+,!\w+1,\w+\['\w+'\]\)/);
+
+            var ttapParams = `cEA,cEE,cEy,cDv,cEp,'BwftfwWS','vKPtJVFI','eKoEYKcC','OFnPTTpe','psKrGopm','sMTFGWrl','hhLaRzBY',`+conceal_function.toString();  /* Generated using offline offset dumper */
 
             // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
-            script = replace.call(script, hook, tokens[0] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
+            script = replace.call(script, hook_location[1], hook_location[1] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
 
             // remove renders
             script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
@@ -300,8 +289,8 @@
             // no zoom
             script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
 
+            // temporary skidlamer dc fix
             script = replace.call(script, /\['send']\('rt'\)/, "['send']('c')");
-
 
             args[1] = script;
         }
