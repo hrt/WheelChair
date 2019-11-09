@@ -1,6 +1,6 @@
 1.8.8
 
-If you DC try clearing cache/cookies. Pretty sure it's a krunker issue
+If you DC turn off ad blockers. If you're using brave - you need to disable it.
 
 Become a cripple, use a WheelChair...
 
