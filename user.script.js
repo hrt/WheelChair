@@ -11,41 +11,99 @@
 
 (function(){
     const replace = String.prototype.replace;
+    var anti_map = [];
 
-    function conceal_function(original_Function, hook_Function) {
-        var anti_map = [];
-        var original_toString = Function.prototype.toString;
-        function hook_toString(...args) {
+    var original_toString = Function.prototype.toString;
+    var hook_toString = new Proxy(original_toString, {
+        apply: function(target, _this, _arguments) {
             for (var i = 0; i < anti_map.length; i++) {
-                if (anti_map[i].from === this) {
-                    return anti_map[i].to;
+                if (anti_map[i].from === _this) {
+                    return target.apply(anti_map[i].to, _arguments);
                 }
             }
-            return original_toString.apply(this, args);
+            return target.apply(_this, _arguments);
         }
-
-        anti_map.push({from: hook_Function, to: original_Function.toString()});
-        anti_map.push({from: hook_toString, to: original_toString.toString()});
-        Function.prototype.toString = hook_toString;
+    });
+    anti_map.push({from: hook_toString, to: original_toString});
+    Function.prototype.toString = hook_toString;
+        
+    var conceal_function = function(original_Function, hook_Function) {
+        anti_map.push({from: hook_Function, to: original_Function});
     };
 
-    var hrtCheat = function(me, inputs, world, consts, math, canSee, pchObjc, objInstances, isYou, recoilAnimY, mouseDownL, mouseDownR, conceal_function) {
+    var hidden_globals = [];
+    var original_getOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
+    var hook_getOwnPropertyDescriptors = new Proxy(original_getOwnPropertyDescriptors, {
+        apply: function(target, _this, _arguments) {
+            var descriptors = target.apply(_this, _arguments);
+            for (var i = 0; i < hidden_globals.length; i++) {
+                delete descriptors[hidden_globals[i]];
+            }
+            return descriptors;
+        }
+    });
+    Object.getOwnPropertyDescriptors = hook_getOwnPropertyDescriptors;
+    conceal_function(original_getOwnPropertyDescriptors, hook_getOwnPropertyDescriptors);
+
+    var invisible_define = function(obj, key, value) {
+        hidden_globals.push(key);
+        Object.defineProperty(obj, key, {
+            enumberable: false,
+            configurable: false,
+            writable: false,
+            value: value
+        });
+    };
+
+    var define_global = function(key, value) {
+        invisible_define(window, key, value);
+    };
+
+    var keyMap = {};
+    var genKey = function() {
+        var a = new Uint8Array(20);
+        crypto.getRandomValues(a);
+        return 'hrt'+Array.from(a,x=>('0'+x.toString(16)).substr(-2)).join('');
+    }
+
+    // Gets overwritten later, so we can place render hooks before anti-cheat
+    var drawVisuals = function() {};
+    var original_clearRect = CanvasRenderingContext2D.prototype.clearRect;
+    var hook_clearRect = new Proxy(original_clearRect, {
+        apply: function(target, _this, _arguments) {
+            target.apply(_this, _arguments);
+            drawVisuals(_this);
+        }
+    });
+    conceal_function(original_clearRect, hook_clearRect);
+    CanvasRenderingContext2D.prototype.clearRect = hook_clearRect;
+
+    var hrtCheat = function(me, inputs, world, consts, math, canSee, pchObjc, objInstances, isYou, recoilAnimY, mouseDownL, mouseDownR) {
         var controls = world.controls;
+        if (controls.scrollDelta) {
+            controls.skipScroll = controls.scrollToSwap;
+            if (!controls.scrollToSwap) {
+                controls.fakeKey(0x4e20,0x1);
+            }
+        }
+        controls.scrollDelta = 0;
+        controls.wSwap = 0;
+
         const SHOOT = 5, SCOPE = 6, xDr = 3, yDr = 2, JUMP = 7, CROUCH = 8;
         var isEnemy = function(player) {return !me.team || player.team != me.team};
         var canHit = function(player) {return null == world[canSee](me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3)};
         var normaliseYaw = function(yaw) {return (yaw % Math.PI2 + Math.PI2) % Math.PI2;};
         var getDir = function(ber, bes, bet, bev) {
-            return Math["atan2"](bes - bev, ber - bet);
+            return Math.atan2(bes - bev, ber - bet);
         };
         var getD3D = function(ber, bes, bet, bev, bew, bf3) {
             var bf4 = ber - bev, bf5 = bes - bew, bf6 = bet - bf3;
-            return Math["sqrt"](bf4 * bf4 + bf5 * bf5 + bf6 * bf6);
-        }
+            return Math.sqrt(bf4 * bf4 + bf5 * bf5 + bf6 * bf6);
+        };
         var getXDire = function(bes, bet, bev, bew, bfh, bfi) {
-            var bfj = Math["abs"](bet - bfh), bfk = getD3D(bes, bet, bev, bew, bfh, bfi);
-            return Math["asin"](bfj / bfk) * (bet > bfh ? -1 : 1);
-        }
+            var bfj = Math.abs(bet - bfh), bfk = getD3D(bes, bet, bev, bew, bfh, bfi);
+            return Math.asin(bfj / bfk) * (bet > bfh ? -1 : 1);
+        };
 
         var dAngleTo = function(x, y, z) {
             var ty = normaliseYaw(getDir(controls.object.position.z, controls.object.position.x, z, x));
@@ -64,7 +122,7 @@
         if (!window.init) {
             window.init = true;
 
-            var drawVisuals = function(c) {
+            drawVisuals = function(c) {
                 var scalingFactor = arguments.callee.caller.caller.arguments[0];
                 var perspective = arguments.callee.caller.caller.arguments[2];
                 var scaledWidth = c.canvas.width / scalingFactor;
@@ -114,6 +172,10 @@
 
 
                     c.save();
+                    var original_strokeStyle = c.strokeStyle;
+                    var original_lineWidth = c.lineWidth;
+                    var original_font = c.font;
+                    var original_fillStyle = c.fillStyle;
 
                     // perfect box esp
                     c.lineWidth = 5;
@@ -160,6 +222,10 @@
                     c.fillText(e.health + ' HP', x, y);
                     c.strokeText(e.health + ' HP', x, y);
 
+                    c.strokeStyle = original_strokeStyle;
+                    c.lineWidth = original_lineWidth;
+                    c.font = original_font;
+                    c.fillStyle = original_fillStyle;
                     c.restore();
 
                     // skelly chams
@@ -177,16 +243,7 @@
 
                 }
             };
-            // render all the visuals
-            var original_clearRect = CanvasRenderingContext2D.prototype.clearRect;
-            var hook_clearRect = function(...args) {
-                original_clearRect.apply(this, args);
-                drawVisuals(this);
-            };
-
-            conceal_function(original_clearRect, hook_clearRect);
-            CanvasRenderingContext2D.prototype.clearRect = hook_clearRect;
-        }
+        };
 
         // target selector - based on closest to aim
         var closest = null, closestAngle = Infinity;
@@ -217,12 +274,9 @@
 
 
         // aimbot
-        // hrt's big brain got a six pack
         var ty = controls.object.rotation.y, tx = controls[pchObjc].rotation.x;
         if (closest) {
             var target = closest;
-            // No idea why public cheats are using target distance in aimbot calc
-            // No idea why it's so difficult for people to not use magic numbers here
             var y = target.y3 + consts.playerHeight - (consts.headScale/* + consts.hitBoxPad*/) / 2 - target.crouchVal * consts.crouchDst;
             if (me.weapon.nAuto && me.didShoot) {
                 inputs[SHOOT] = 0;
@@ -241,9 +295,9 @@
             // perfect recoil control..?
             tx -= .3 * me[recoilAnimY];
         } else {
+            // inputs[CROUCH] = controls.keys[controls.crouchKey] * 1; // auto crouch
             inputs[SHOOT] = controls[mouseDownL];
             inputs[SCOPE] = controls[mouseDownR];
-            // inputs[CROUCH] = controls.keys[controls.crouchKey] * 1; // auto crouch
         }
 
         // silent aim
@@ -254,7 +308,9 @@
         controls.keys[controls.reloadKey] = !haveAmmo() * 1;
 
         inputs[JUMP] = (controls.keys[controls.jumpKey] && !me.didJump) * 1;
-    }
+    };
+    keyMap['hrtCheat'] = genKey();
+    define_global(keyMap['hrtCheat'], hrtCheat);    
 
     // only big iq people read this ttap#4547
     // big up my boy hrt and ttap for releasing
@@ -270,16 +326,25 @@
                 window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
             }
 
-            var hook_location = script.match(/(!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w+1\)\),\w+\['\w+'\]=\w+0,\w+\['\w+'\]=\w+0,!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),)\w+\['\w+'\]\(\w+,\w+,!\w+1,\w+\['\w+'\]\)/);
+            var overwritecode = script.match(/(\w+\['\w+'\]&&\(\w+\['\w+'\]=\w+\['\w+'\],!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0),!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),\w+\['\w+'\]\(\w+,\w+,!\w*1,\w+\['\w+'\]\)/)[1];
+            var ttapParams = `cEA,cEE,cEy,cDv,cEp,'BwftfwWS','vKPtJVFI','eKoEYKcC','OFnPTTpe','psKrGopm','sMTFGWrl','hhLaRzBY'`;
+            var cheatcode = `window['` + keyMap['hrtCheat'] + `'](` + ttapParams + `)`;
 
-            var ttapParams = `cEA,cEE,cEy,cDv,cEp,'BwftfwWS','vKPtJVFI','eKoEYKcC','OFnPTTpe','psKrGopm','sMTFGWrl','hhLaRzBY',`+conceal_function.toString();  /* Generated using offline offset dumper */
+            /*
+                pad to avoid stack trace line number detections
+                the script will have the same length as it originally had
+            */
+            while (cheatcode.length < overwritecode.length) {
+                cheatcode += ' ';
+            }
 
-            // Doesn't make sense to hook aimbot anywhere else - unlike every other public cheat
-            script = replace.call(script, hook_location[1], hook_location[1] + '(' + hrtCheat.toString() + ')(' + ttapParams + '),');
+            /* the bIg mod */
+            script = replace.call(script, overwritecode, cheatcode);
 
-            // remove renders
-            script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
+            /* Uncomment to hide normal name esp but it does come with some potential detection vectors :shrug: */
+            // script = replace.call(script, /'none'==menuHolder\['style'\]\['display'\]&&'none'==endUI\['style'\]\['display'\]\)/g, 'false)');
 
+            /* Below are some misc features which I wouldn't consider bannable, third party clients could be using them */
             // all weapons trails on
             script = replace.call(script, /\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
 
@@ -289,11 +354,15 @@
             // no zoom
             script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
 
-            // temporary skidlamer dc fix
-            script = replace.call(script, /\['send']\('rt'\)/, "['send']('c')");
-
+            var original_script = args[1];
             args[1] = script;
+            var mod_fn = new target(...args);
+            args[1] = original_script;
+            var original_fn = new target(...args);
+            conceal_function(original_fn, mod_fn);
+            return mod_fn;
         }
+
         return new target(...args);
       }
     };
