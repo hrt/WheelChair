@@ -50,7 +50,7 @@
         Object.defineProperty(obj, key, {
             enumberable: false,
             configurable: false,
-            writable: false,
+            writable: true,
             value: value
         });
     };
@@ -65,6 +65,9 @@
         crypto.getRandomValues(a);
         return 'hrt'+Array.from(a,x=>('0'+x.toString(16)).substr(-2)).join('');
     }
+
+    keyMap['init'] = genKey();
+    define_global(keyMap['init'], false);
 
     // Gets overwritten later, so we can place render hooks before anti-cheat
     var drawVisuals = function() {};
@@ -119,8 +122,8 @@
         var isCloseEnough = function(player) {var distance = calcDistanceTo(player); return me.weapon.range >= distance && ("Shotgun" != me.weapon.name || distance < 70) && ("Akimbo Uzi" != me.weapon.name || distance < 100);};
         var haveAmmo = function() {return !(me.ammos[me.weaponIndex] !== undefined && me.ammos[me.weaponIndex] == 0);};
         // runs once
-        if (!window.init) {
-            window.init = true;
+        if (!window[keyMap['init']]) {
+            window[keyMap['init']] = true;
 
             drawVisuals = function(c) {
                 var scalingFactor = arguments.callee.caller.caller.arguments[0];
@@ -310,7 +313,7 @@
         inputs[JUMP] = (controls.keys[controls.jumpKey] && !me.didJump) * 1;
     };
     keyMap['hrtCheat'] = genKey();
-    define_global(keyMap['hrtCheat'], hrtCheat);    
+    define_global(keyMap['hrtCheat'], hrtCheat);
 
     // only big iq people read this ttap#4547
     // big up my boy hrt and ttap for releasing
