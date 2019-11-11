@@ -189,6 +189,135 @@
 
         // bhop
         inputs[JUMP] = (controls.keys[controls.jumpKey] && !me.didJump) * 1;
+
+        // runs once to set up renders
+        if (!window[keyMap['init']]) {
+            window[keyMap['init']] = true;
+
+            drawVisuals = function(c) {
+                let scalingFactor = arguments.callee.caller.caller.arguments[0];
+                let perspective = arguments.callee.caller.caller.arguments[2];
+                let scaledWidth = c.canvas.width / scalingFactor;
+                let scaledHeight = c.canvas.height / scalingFactor;
+                let worldPosition = perspective.camera.getWorldPosition();
+                for (var i = 0; i < world.players.list.length; i++) {
+                    let player = world.players.list[i];
+                    let e = players[i];
+                    if (e[isYou] || !e.active || !e[objInstances] || !isEnemy(e)) {
+                        continue;
+                    }
+
+                    // the below variables correspond to the 2d box esps corners
+                    // note: we can already tell what ymin ymax is
+                    let xmin = Infinity;
+                    let xmax = -Infinity;
+                    let ymin = Infinity;
+                    let ymax = -Infinity;
+                    let br = false;
+                    for (var j = -1; !br && j < 2; j+=2) {
+                        for (var k = -1; !br && k < 2; k+=2) {
+                            for (var l = 0; !br && l < 2; l++) {
+                                let position = e[objInstances].position.clone();
+                                position.x += j * consts.playerScale;
+                                position.z += k * consts.playerScale;
+                                position.y += l * (consts.playerHeight - e.crouchVal * consts.crouchDst);
+                                if (!perspective.frustum.containsPoint(position)) {
+                                    br = true;
+                                    break;
+                                }
+                                position.project(perspective.camera);
+                                xmin = Math.min(xmin, position.x);
+                                xmax = Math.max(xmax, position.x);
+                                ymin = Math.min(ymin, position.y);
+                                ymax = Math.max(ymax, position.y);
+                            }
+                        }
+                    }
+
+                    if (br) {
+                        continue;
+                    }
+
+                    xmin = (xmin + 1) / 2;
+                    ymin = (ymin + 1) / 2;
+                    xmax = (xmax + 1) / 2;
+                    ymax = (ymax + 1) / 2;
+
+
+                    c.save();
+                    // save and restore these variables later so they got nothing on us
+                    const original_strokeStyle = c.strokeStyle;
+                    const original_lineWidth = c.lineWidth;
+                    const original_font = c.font;
+                    const original_fillStyle = c.fillStyle;
+
+                    // perfect box esp
+                    c.lineWidth = 5;
+                    c.strokeStyle = 'rgba(255,50,50,1)';
+
+                    let distanceScale = Math.max(.3, 1 - getD3D(worldPosition.x, worldPosition.y, worldPosition.z, e.x, e.y, e.z) / 600);
+                    c.scale(distanceScale, distanceScale);
+                    let xScale = scaledWidth / distanceScale;
+                    let yScale = scaledHeight / distanceScale;
+
+                    c.beginPath();
+                    ymin = yScale * (1 - ymin);
+                    ymax = yScale * (1 - ymax);
+                    xmin = xScale * xmin;
+                    xmax = xScale * xmax;
+                    c.moveTo(xmin, ymin);
+                    c.lineTo(xmin, ymax);
+                    c.lineTo(xmax, ymax);
+                    c.lineTo(xmax, ymin);
+                    c.lineTo(xmin, ymin);
+                    c.stroke();
+
+                    // health bar
+                    c.fillStyle = "rgba(255,50,50,1)";
+                    let barMaxHeight = ymax - ymin;
+                    c.fillRect(xmin - 7, ymin, -10, barMaxHeight);
+                    c.fillStyle = "#00FFFF";
+                    c.fillRect(xmin - 7, ymin, -10, barMaxHeight * (e.health / e.maxHealth));
+
+                    // info
+                    c.font = "60px Sans-serif";
+                    c.fillStyle = "white";
+                    c.strokeStyle='black';
+                    c.lineWidth = 1;
+                    let x = xmax + 7;
+                    let y = ymax;
+                    c.fillText(e.name, x, y);
+                    c.strokeText(e.name, x, y);
+                    c.font = "30px Sans-serif";
+                    y += 35;
+                    c.fillText(e.weapon.name, x, y);
+                    c.strokeText(e.weapon.name, x, y);
+                    y += 35;
+                    c.fillText(e.health + ' HP', x, y);
+                    c.strokeText(e.health + ' HP', x, y);
+
+                    c.strokeStyle = original_strokeStyle;
+                    c.lineWidth = original_lineWidth;
+                    c.font = original_font;
+                    c.fillStyle = original_fillStyle;
+                    c.restore();
+
+                    // skelly chams
+                    // note: this can be done better
+                    if (e.legMeshes[0]) {
+                        let material = e.legMeshes[0].material;
+                        material.alphaTest = 1;
+                        material.depthTest = false;
+                        material.fog = false;
+                        material.emissive.r = 1;
+                        material.emissive.g = 1;
+                        material.emissive.b = 1;
+                        material.wireframe = true;
+                    }
+
+                }
+            };
+        };
     };
     keyMap['hrtCheat'] = genKey();
     global_invisible_define(keyMap['hrtCheat'], hrtCheat);
