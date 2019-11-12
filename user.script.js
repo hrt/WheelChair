@@ -46,7 +46,7 @@
         }
     });
     Object.getOwnPropertyDescriptors = hook_getOwnPropertyDescriptors;
-    conceal_function(original_getOwnPropertyDescriptors, hook_getOwnPropertyDescriptors);
+    conceal_function(original_getOwnPropertyDescriptors, hook_getOwnPropertyDescriptors)
 
     let invisible_define = function(obj, key, value) {
         hidden_globals.push(key);
