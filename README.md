@@ -1,6 +1,5 @@
-1.8.8
+1.8.8 (outdated)
 
-If you DC turn off ad blockers
 
 
 Become a cripple, use a WheelChair...
