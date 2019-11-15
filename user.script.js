@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Krunker WheelChair
 // @namespace    https://github.com/hrt
-// @version      1.8.8
+// @version      1.8.9
 // @description  WheelChair
 // @author       hrt x ttap
 // @match        *://krunker.io/*
@@ -9,8 +9,10 @@
 // @grant        none
 // ==/UserScript==
 
-(function(){
+(function() {
     const replace = String.prototype.replace;
+    const original_call = Function.prototype.call;
+
     let anti_map = [];
 
     // hook toString to conceal all hooks
@@ -28,7 +30,7 @@
     // hide toString hook itself
     anti_map.push({from: hook_toString, to: original_toString});
     Function.prototype.toString = hook_toString;
-        
+
     let conceal_function = function(original_Function, hook_Function) {
         anti_map.push({from: hook_Function, to: original_Function});
     };
@@ -101,9 +103,17 @@
         controls.wSwap = 0;
         /******************************************************/
 
+        const playerHeight = 11;
+        const crouchDst = 3;
+        const headScale = 2;
+        const hitBoxPad = 1;
+        const armScale = 1.3;
+        const chestWidth = 2.6;
+        const armInset = -.1;
+        const playerScale = (2 * armScale + chestWidth + armInset) / 2;
         const SHOOT = 5, SCOPE = 6, xDr = 3, yDr = 2, JUMP = 7, CROUCH = 8;
         let isEnemy = function(player) {return !me.team || player.team != me.team};
-        let canHit = function(player) {return null == world[canSee](me, player.x3, player.y3 - player.crouchVal * consts.crouchDst, player.z3)};
+        let canHit = function(player) {return null == world[canSee](me, player.x3, player.y3 - player.crouchVal * crouchDst, player.z3)};
         let normaliseYaw = function(yaw) {return (yaw % Math.PI2 + Math.PI2) % Math.PI2;};
         let getDir = function(a, b, c, d) {
             return Math.atan2(b - d, a - c);
@@ -126,7 +136,7 @@
             let dPitch = tx - ox;
             return Math.hypot(dYaw, dPitch);
         };
-        let calcAngleTo = function(player) {return dAngleTo(player.x3, player.y3 + consts.playerHeight - (consts.headScale + consts.hitBoxPad) / 2 - player.crouchVal * consts.crouchDst, player.z3);};
+        let calcAngleTo = function(player) {return dAngleTo(player.x3, player.y3 + playerHeight - (headScale + hitBoxPad) / 2 - player.crouchVal * crouchDst, player.z3);};
         let calcDistanceTo = function(player) {return getD3D(player.x3, player.y3, player.z3, me.x, me.y, me.z)};
         let isCloseEnough = function(player) {let distance = calcDistanceTo(player); return me.weapon.range >= distance && ("Shotgun" != me.weapon.name || distance < 70) && ("Akimbo Uzi" != me.weapon.name || distance < 100);};
         let haveAmmo = function() {return !(me.ammos[me.weaponIndex] !== undefined && me.ammos[me.weaponIndex] == 0);};
@@ -155,12 +165,11 @@
                 closest = e;
             }
         }
-
         // aimbot
         let ty = controls.object.rotation.y, tx = controls[pchObjc].rotation.x;
         if (closest) {
             let target = closest;
-            let y = target.y3 + consts.playerHeight - (consts.headScale/* + consts.hitBoxPad*/) / 2 - target.crouchVal * consts.crouchDst;
+            let y = target.y3 + playerHeight - (headScale/* + hitBoxPad*/) / 2 - target.crouchVal * crouchDst;
             if (me.weapon.nAuto && me.didShoot) {
                 inputs[SHOOT] = 0;
             } else if (!me.aimVal) {
@@ -218,9 +227,9 @@
                         for (var k = -1; !br && k < 2; k+=2) {
                             for (var l = 0; !br && l < 2; l++) {
                                 let position = e[objInstances].position.clone();
-                                position.x += j * consts.playerScale;
-                                position.z += k * consts.playerScale;
-                                position.y += l * (consts.playerHeight - e.crouchVal * consts.crouchDst);
+                                position.x += j * playerScale;
+                                position.z += k * playerScale;
+                                position.y += l * (playerHeight - e.crouchVal * crouchDst);
                                 if (!perspective.frustum.containsPoint(position)) {
                                     br = true;
                                     break;
@@ -330,13 +339,28 @@
 
             // anti anti chet & anti skid
             const version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
-            if (version !== "0x16589") {
+            if (version !== "0x597b") {
                 window[atob('ZG9jdW1lbnQ=')][atob('d3JpdGU=')](atob('VmVyc2lvbiBtaXNzbWF0Y2gg') + version);
                 window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
             }
 
+            var canSee = "'"+script.match(/,this\['(\w+)'\]=function\(\w+,\w+,\w+,\w+,\w+\){if\(!\w+\)return!\w+;/)[1]+"'";
+            var pchObjc = "'"+script.match(/\(\w+,\w+,\w+\),this\['(\w+)'\]=new \w+\['\w+'\]\(\)/)[1]+"'";
+            var objInstances = "'"+script.match(/\[\w+\]\['\w+'\]=!\w+,this\['\w+'\]\[\w+\]\['\w+'\]&&\(this\['\w+'\]\[\w+\]\['(\w+)'\]\['\w+'\]=!\w+/)[1]+"'";
+            var isYou = "'"+script.match(/,this\['\w+'\]=!\w+,this\['\w+'\]=!\w+,this\['(\w+)'\]=\w+,this\['\w+'\]\['length'\]=\w+,this\[/)[1]+"'";
+            var recoilAnimY = "'"+script.match(/\w*1,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*1,this\['\w+'\]=\w*1,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,/)[1]+"'";
+            var mouseDownL = "'"+script.match(/this\['\w+'\]=function\(\){this\['(\w+)'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]={}/)[1]+"'";
+            var mouseDownR = "'"+script.match(/this\['\w+'\]=function\(\){this\['(\w+)'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]={}/)[2]+"'";
+
+            var inputs = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[2];
+            var world = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[1];
+            var consts = script.match(/\w+\['\w+'\]\),\w+\['\w+'\]\(\w+\['\w+'\],\w+\['\w+'\]\+\w+\['\w+'\]\*(\w+)/)[1];
+            var me = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[3];
+            var math = script.match(/\\x20\-50\%\)\\x20rotate\('\+\((\w+)\['\w+'\]\(\w+\[\w+\]\['\w+'\]/)[1];
+
+
             const code_to_overwrite = script.match(/(\w+\['\w+'\]&&\(\w+\['\w+'\]=\w+\['\w+'\],!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0),!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),\w+\['\w+'\]\(\w+,\w+,!\w*1,\w+\['\w+'\]\)/)[1];
-            const ttapParams = `cEA,cEE,cEy,cDv,cEp,'BwftfwWS','vKPtJVFI','eKoEYKcC','OFnPTTpe','psKrGopm','sMTFGWrl','hhLaRzBY'`;
+            const ttapParams = [me, inputs, world, consts, math, canSee, pchObjc, objInstances, isYou, recoilAnimY, mouseDownL, mouseDownR].toString();
             let call_hrt = `window['` + keyMap['hrtCheat'] + `'](` + ttapParams + `)`;
 
             /*
@@ -347,6 +371,8 @@
                 call_hrt += ' ';
             }
 
+            const hooked_call = Function.prototype.call;
+            Function.prototype.call = original_call;
             /* the bIg mod */
             script = replace.call(script, code_to_overwrite, call_hrt);
 
@@ -359,6 +385,9 @@
 
             // no zoom
             script = replace.call(script, /,'zoom':.+?(?=,)/g, ",'zoom':1");
+
+            // script = replace.call(script, /(void this\['sendQueue'\]\['push'\]\(\[(\w+),(\w+)\]\);)/, '$1_[$2]=$3;');
+            Function.prototype.call = hooked_call;
             /***********************************************************************************************************/
 
             // bypass modification check of returned function
@@ -370,7 +399,6 @@
             conceal_function(original_fn, mod_fn);
             return mod_fn;
         }
-
         return new target(...args);
       }
     };
