@@ -1,5 +1,6 @@
 1.8.8 (outdated)
 
+Expect an update around 20:00 GMT / 15:00 EST assuming a tragedies do not occur (like the game going down).
 
 
 Become a cripple, use a WheelChair...
