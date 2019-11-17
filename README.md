@@ -1,15 +1,16 @@
 1.8.9
 
 
-
 Become a cripple, use a WheelChair...
 
 
 # Gold Standard WheelChair
-Note: certain features have been removed but it should still destroy
+Remove all exisiting scripts. Wheelchair is now a chromium based extension that will stop you from having to reinstalling scripts.
 
-1. Install tamper monkey
-2. Create new script -> paste the code from `user.script.js` and save
+1. Navigate to your chromium browsers extensions page
+2. Enable developer mode (probably a checkbox in the top right)
+3. [Download this unpacked extension](https://github.com/hrt/WheelChair/releases/download/2.0/loader.zip)
+4. Click on "Load unpacked extension" and select the downloaded zip file
 
 http://youtube.com/hrtbot
 [![WheelChair](https://i.imgur.com/FXvZhq3.png)](http://youtube.com/hrtbot)

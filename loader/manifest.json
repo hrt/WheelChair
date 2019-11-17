@@ -1,0 +1,8 @@
+{
+  "name": "♿",
+  "version": "2.0.0",
+  "manifest_version": 2,
+  "description": "https://github.com/hrt/wheelchair",
+  "content_scripts": [
+  	{"matches":["https://krunker.io/", "https://krunker.io/*game*"],"run_at": "document_start","js": ["chairloader.js"],"all_frames":true,"match_about_blank":true}]
+}
