@@ -11,8 +11,3 @@ Remove all exisiting scripts. Wheelchair is now a chromium based extension that 
 2. Enable developer mode (probably a checkbox in the top right)
 3. [Download this unpacked extension](https://github.com/hrt/WheelChair/releases/download/2.0/loader.zip)
 4. Drag the downloaded zip into the extensions page
-
-http://youtube.com/hrtbot
-[![WheelChair](https://i.imgur.com/FXvZhq3.png)](http://youtube.com/hrtbot)
-
-
