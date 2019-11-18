@@ -8,7 +8,7 @@ function cripple_window(_window) {
     }
 
     // state is shared across all frames
-    let shared_state = {functions_to_hide: [], strings_to_hide: [], hidden_globals: [], init: false, hrt: []};
+    let shared_state = {functions_to_hide: new WeakMap(), strings_to_hide: [], hidden_globals: [], init: false, hrt: []};
 
     let invisible_define = function(obj, key, value) {
         shared_state.hidden_globals.push(key);
@@ -34,10 +34,9 @@ function cripple_window(_window) {
     const original_toString = _window.Function.prototype.toString;
     let hook_toString = new Proxy(original_toString, {
         apply: function(target, _this, _arguments) {
-            for (var i = 0; i < shared_state.functions_to_hide.length; i++) {
-                if (shared_state.functions_to_hide[i].from === _this) {
-                    return target.apply(shared_state.functions_to_hide[i].to, _arguments);
-                }
+            let lookup_fn = shared_state.functions_to_hide.get(_this);
+            if (lookup_fn) {
+                return target.apply(lookup_fn, _arguments);
             }
 
             let ret = target.apply(_this, _arguments);
@@ -50,7 +49,7 @@ function cripple_window(_window) {
     _window.Function.prototype.toString = hook_toString;
 
     let conceal_function = function(original_Function, hook_Function) {
-        shared_state.functions_to_hide.push({from: hook_Function, to: original_Function});
+        shared_state.functions_to_hide.set(hook_Function, original_Function);
     };
 
     let conceal_string = function(original_string, hook_string) {
