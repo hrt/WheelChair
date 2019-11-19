@@ -8,10 +8,10 @@ function cripple_window(_window) {
     }
 
     // state is shared across all frames
-    let shared_state = {functions_to_hide: new WeakMap(), strings_to_hide: [], hidden_globals: [], init: false, hrt: []};
+    let shared_state = new Map(Object.entries({functions_to_hide: new WeakMap(), strings_to_hide: [], hidden_globals: [], init: false}));
 
     let invisible_define = function(obj, key, value) {
-        shared_state.hidden_globals.push(key);
+        shared_state.get('hidden_globals').push(key);
         Object.defineProperty(obj, key, {
             enumberable: false,
             configurable: false,
@@ -34,14 +34,14 @@ function cripple_window(_window) {
     const original_toString = _window.Function.prototype.toString;
     let hook_toString = new Proxy(original_toString, {
         apply: function(target, _this, _arguments) {
-            let lookup_fn = shared_state.functions_to_hide.get(_this);
+            let lookup_fn = shared_state.get('functions_to_hide').get(_this);
             if (lookup_fn) {
                 return target.apply(lookup_fn, _arguments);
             }
 
             let ret = target.apply(_this, _arguments);
-            for (var i = 0; i < shared_state.strings_to_hide.length; i++) {
-                ret = ret.replace(shared_state.strings_to_hide[i].from, shared_state.strings_to_hide[i].to);
+            for (var i = 0; i < shared_state.get('strings_to_hide').length; i++) {
+                ret = ret.replace(shared_state.get('strings_to_hide')[i].from, shared_state.get('strings_to_hide')[i].to);
             }
             return ret;
         }
@@ -49,11 +49,11 @@ function cripple_window(_window) {
     _window.Function.prototype.toString = hook_toString;
 
     let conceal_function = function(original_Function, hook_Function) {
-        shared_state.functions_to_hide.set(hook_Function, original_Function);
+        shared_state.get('functions_to_hide').set(hook_Function, original_Function);
     };
 
     let conceal_string = function(original_string, hook_string) {
-        shared_state.strings_to_hide.push({from: new RegExp(hook_string.replace(/([\[|\]|\(|\)|\*|\\|\.|\+])/g,'\\$1'), 'g'), to: original_string});
+        shared_state.get('strings_to_hide').push({from: new RegExp(hook_string.replace(/([\[|\]|\(|\)|\*|\\|\.|\+])/g,'\\$1'), 'g'), to: original_string});
     };
 
     // hook Object.getOwnPropertyDescriptors to hide variables from window
@@ -67,8 +67,8 @@ function cripple_window(_window) {
                 e.stack = e.stack.replace(/.*Object.*\n/g, '');
                 throw e;
             }
-            for (var i = 0; i < shared_state.hidden_globals.length; i++) {
-                delete descriptors[shared_state.hidden_globals[i]];
+            for (var i = 0; i < shared_state.get('hidden_globals').length; i++) {
+                delete descriptors[shared_state.get('hidden_globals')[i]];
             }
             return descriptors;
         }
@@ -97,8 +97,8 @@ function cripple_window(_window) {
     _window.open = hook_open;
 
     // me, inputs, world, consts, math are objects the rest are key strings
-    if (shared_state.hrt.length === 0) {
-        shared_state.hrt.push(function(me, inputs, world, consts, math) {
+    if (!shared_state.get('hrt')) {
+        shared_state.set('hrt', function(me, inputs, world, consts, math) {
             /******************************************************/
             /* re implements code that we overwrote to place hook */
             let controls = world.controls;
@@ -211,8 +211,8 @@ function cripple_window(_window) {
             inputs[JUMP] = (controls.keys[controls.jumpKey] && !me.didJump) * 1;
 
             // runs once
-            if (!shared_state.init) {
-                shared_state.init = true;
+            if (!shared_state.get('init')) {
+                shared_state.set('init', true);
 
                 drawVisuals = function(c) {
                     let scalingFactor = arguments.callee.caller.caller.arguments[0];
@@ -377,7 +377,7 @@ function cripple_window(_window) {
 
             const code_to_overwrite = script.match(/(\w+\['\w+'\]&&\(\w+\['\w+'\]=\w+\['\w+'\],!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0),!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),\w+\['\w+'\]\(\w+,\w+,!\w*1,\w+\['\w+'\]\)/)[1];
             const ttapParams = [me, inputs, world, consts, math].toString();
-            let call_hrt = `window.top['` + master_key + `'].hrt[0](` + ttapParams + `)`;
+            let call_hrt = `window.top['` + master_key + `'].get('hrt')(` + ttapParams + `)`;
 
             /*
                 pad to avoid stack trace line:column number detection
