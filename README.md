@@ -1,3 +1,6 @@
+FYI, updating this is one of my lowest of priorities. So don't expect it soon. Outdated for 1.9.0
+
+
 # ♿ 1.8.9 wheelchair
 Become a cripple, use a wheelchair...
 
