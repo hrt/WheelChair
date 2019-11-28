@@ -49,7 +49,7 @@ function cripple_window(_window) {
                 var ret = Function.prototype.apply.apply(target, [_this, _arguments]);
             } catch (e) {
                 // modify stack trace to hide proxy
-                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/, '');
                 throw e;
             }
 
@@ -82,7 +82,7 @@ function cripple_window(_window) {
                 var descriptors = Function.prototype.apply.apply(target, [_this, _arguments]);
             } catch (e) {
                 // modify stack trace to hide proxy
-                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/, '');
                 throw e;
             }
             for (var i = 0; i < shared_state.get('hidden_globals').length; i++) {
@@ -102,7 +102,7 @@ function cripple_window(_window) {
                 var ret = Function.prototype.apply.apply(target, [_this, _arguments]);
             } catch (e) {
                 // modify stack trace to hide proxy
-                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/, '');
                 throw e;
             }
             drawVisuals(_this);
@@ -120,7 +120,7 @@ function cripple_window(_window) {
                 let ret = Function.prototype.apply.apply(target, [_this, _arguments]);
             } catch (e) {
                 // modify stack trace to hide proxy
-                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/, '');
                 throw e;
             }
             return null;
@@ -377,7 +377,7 @@ function cripple_window(_window) {
                 var original_fn = Function.prototype.apply.apply(target, [_this, _arguments]);
             } catch (e) {
                 // modify stack trace to hide proxy
-                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/, '');
                 throw e;
             }
 
