@@ -1,3 +1,14 @@
+// ==UserScript==
+// @name         Krunker WheelChair
+// @namespace    https://github.com/hrt
+// @version      1.8.9
+// @description  WheelChair
+// @author       hrt x ttap
+// @match        https://krunker.io/*
+// @run-at       document-start
+// @grant        none
+// ==/UserScript==
+
 // note:    this script gets injected into its own isolated context/iframe
 //          to console.log we would have to call window.top.console.log
 
