@@ -1,3 +1,6 @@
+Uninstall and reinstall the chrome extension. There has been an update.
+
+
 # ♿ 1.9.0 wheelchair
 Become a cripple, use a wheelchair...
 
