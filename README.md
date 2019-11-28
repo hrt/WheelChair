@@ -14,7 +14,11 @@ Remove all exisiting scripts.
 
 If you can figure out reliable ways to identify the presence of the extension running then I am interested to know how.
 
-### Tampermonkey (deprecated)
+
+
+
+
+### Tampermonkey (DETECTED.)
 Alternatively you can install and use [tampermonkey](https://www.tampermonkey.net/) . This method is not suggested since it is easy to detect.
 
 1. Create new script
