@@ -22,24 +22,31 @@ function cripple_window(_window) {
 
     // unique to each user
     const master_key = 'ttap#4547';
-    if (!window.top[master_key]) {
+    if (!_window.top[master_key]) {
         // initialise top state
-        invisible_define(window.top, master_key, shared_state);
+        invisible_define(_window.top, master_key, shared_state);
     } else {
         // restore
-        shared_state = window.top[master_key];
+        shared_state = _window.top[master_key];
     }
 
     // hook toString to hide presence
     const original_toString = _window.Function.prototype.toString;
     let hook_toString = new Proxy(original_toString, {
         apply: function(target, _this, _arguments) {
-            let lookup_fn = shared_state.get('functions_to_hide').get(_this);
-            if (lookup_fn) {
-                return target.apply(lookup_fn, _arguments);
+            try {
+                var ret = Function.prototype.apply.apply(target, [_this, _arguments]);
+            } catch (e) {
+                // modify stack trace to hide proxy
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                throw e;
             }
 
-            let ret = target.apply(_this, _arguments);
+            let lookup_fn = shared_state.get('functions_to_hide').get(_this);
+            if (lookup_fn) {
+                return Function.prototype.apply.apply(target, [lookup_fn, _arguments]);
+            }
+
             for (var i = 0; i < shared_state.get('strings_to_hide').length; i++) {
                 ret = ret.replace(shared_state.get('strings_to_hide')[i].from, shared_state.get('strings_to_hide')[i].to);
             }
@@ -61,10 +68,10 @@ function cripple_window(_window) {
     let hook_getOwnPropertyDescriptors = new Proxy(original_getOwnPropertyDescriptors, {
         apply: function(target, _this, _arguments) {
             try {
-                var descriptors = target.apply(_this, _arguments);
+                var descriptors = Function.prototype.apply.apply(target, [_this, _arguments]);
             } catch (e) {
                 // modify stack trace to hide proxy
-                e.stack = e.stack.replace(/.*Object.*\n/g, '');
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
                 throw e;
             }
             for (var i = 0; i < shared_state.get('hidden_globals').length; i++) {
@@ -80,17 +87,31 @@ function cripple_window(_window) {
     const original_clearRect = _window.CanvasRenderingContext2D.prototype.clearRect;
     let hook_clearRect = new Proxy(original_clearRect, {
         apply: function(target, _this, _arguments) {
-            target.apply(_this, _arguments);
+            try {
+                var ret = Function.prototype.apply.apply(target, [_this, _arguments]);
+            } catch (e) {
+                // modify stack trace to hide proxy
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                throw e;
+            }
             drawVisuals(_this);
+            return ret;
         }
     });
     _window.CanvasRenderingContext2D.prototype.clearRect = hook_clearRect;
 
-    // hook window.open to always return null (pop up blocker)
+    // hook window.open to always return null
     // otherwise we would have to also patch native functions in new window
     const original_open = _window.open;
     let hook_open = new Proxy(original_open, {
         apply: function(target, _this, _arguments) {
+            try {
+                let ret = Function.prototype.apply.apply(target, [_this, _arguments]);
+            } catch (e) {
+                // modify stack trace to hide proxy
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                throw e;
+            }
             return null;
         }
     });
@@ -340,91 +361,96 @@ function cripple_window(_window) {
     }
 
     const handler = {
-      construct(target, args) {
-        try {
-            var original_fn = new target(...args);
-        } catch (e) {
-            // modify stack trace to hide proxy
-            e.stack = e.stack.replace(/.*Object.*\n/g, '');
-            throw e;
+        apply: function(target, _this, _arguments) {
+            try {
+                var original_fn = Function.prototype.apply.apply(target, [_this, _arguments]);
+            } catch (e) {
+                // modify stack trace to hide proxy
+                e.stack = e.stack.replace(/\n.*Object\.apply \(<.*/g, '');
+                throw e;
+            }
+
+            if (_arguments.length == 2 && _arguments[1].length > parseInt("1337 ttap#4547")) {
+                let script = _arguments[1];
+
+                // anti anti chet & anti skid
+                const version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
+                if (version !== "0x17e87") {
+                    _window[atob('ZG9jdW1lbnQ=')][atob('d3JpdGU=')](atob('VmVyc2lvbiBtaXNzbWF0Y2gg') + version);
+                    _window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
+                }
+
+                // note: this window is not the main window
+                window['canSee'] = script.match(/,this\['(\w+)'\]=function\(\w+,\w+,\w+,\w+,\w+\){if\(!\w+\)return!\w+;/)[1];
+                window['pchObjc'] = script.match(/\(\w+,\w+,\w+\),this\['(\w+)'\]=new \w+\['\w+'\]\(\)/)[1];
+                window['objInstances'] = script.match(/\[\w+\]\['\w+'\]=!\w+,this\['\w+'\]\[\w+\]\['\w+'\]&&\(this\['\w+'\]\[\w+\]\['(\w+)'\]\['\w+'\]=!\w+/)[1];
+                window['isYou'] = script.match(/,this\['\w+'\]=!\w+,this\['\w+'\]=!\w+,this\['(\w+)'\]=\w+,this\['\w+'\]\['length'\]=\w+,this\[/)[1];
+                window['recoilAnimY'] = script.match(/\w*1,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*1,this\['\w+'\]=\w*1,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,/)[1];
+                window['mouseDownL'] = script.match(/this\['\w+'\]=function\(\){this\['(\w+)'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]={}/)[1];
+                window['mouseDownR'] = script.match(/this\['\w+'\]=function\(\){this\['(\w+)'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]={}/)[2];
+
+                const inputs = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[2];
+                const world = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[1];
+                const consts = script.match(/\w+\['\w+'\]\),\w+\['\w+'\]\(\w+\['\w+'\],\w+\['\w+'\]\+\w+\['\w+'\]\*(\w+)/)[1];
+                const me = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[3];
+                const math = script.match(/\\x20\-50\%\)\\x20rotate\('\+\((\w+)\['\w+'\]\(\w+\[\w+\]\['\w+'\]/)[1];
+
+
+                const code_to_overwrite = script.match(/(\w+\['\w+'\]&&\(\w+\['\w+'\]=\w+\['\w+'\],!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0),!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),\w+\['\w+'\]\(\w+,\w+,!\w*1,\w+\['\w+'\]\)/)[1];
+                const ttapParams = [me, inputs, world, consts, math].toString();
+                let call_hrt = `top['` + master_key + `'].get('hrt')(` + ttapParams + `)`;
+
+                /*
+                    pad to avoid stack trace line:column number detection
+                    the script will have the same length as it originally had
+                */
+                if (call_hrt.length + 4 > code_to_overwrite.length) {
+                    throw 'WHEELCHAIR: target function too small ' + [call_hrt.length, code_to_overwrite.length];
+                }
+                let whitespaces = code_to_overwrite.match(/\s/g);
+                for (var i = 0; i < whitespaces && whitespaces.length; i++) {
+                    call_hrt += whitespaces[i];
+                }
+                // call_hrt += '/*';
+                call_hrt += '  ';
+                while (call_hrt.length < code_to_overwrite.length - 2) {
+                    // call_hrt += '*';
+                    call_hrt += ' ';
+                }
+                // call_hrt += '*/';
+                call_hrt += '  ';
+
+                script = script.replace(code_to_overwrite, call_hrt);
+                conceal_string(code_to_overwrite, call_hrt);
+
+                /***********************************************************************************************************/
+                /* Below are some misc features which I wouldn't consider bannable                                         */
+                // all weapons trails on
+                // script = script.replace(/\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
+
+                // color blind mode
+                // script = script.replace(/#9eeb56/g, '#00FFFF');
+
+                // no zoom
+                // script = script.replace(/,'zoom':.+?(?=,)/g, ",'zoom':1");
+                /***********************************************************************************************************/
+                // bypass modification check of returned function
+                const original_script = _arguments[1];
+                _arguments[1] = script;
+                let mod_fn = Function.prototype.apply.apply(target, [_this, _arguments]);
+                _arguments[1] = original_script;
+                conceal_function(original_fn, mod_fn);
+
+                return mod_fn;
+            }
+            return original_fn;
         }
-
-        if (args.length == 2 && args[1].length > parseInt("1337 ttap#4547")) {
-            let script = args[1];
-
-            // anti anti chet & anti skid
-            const version = script.match(/\w+\['exports'\]=(0[xX][0-9a-fA-F]+);/)[1];
-            if (version !== "0x597b") {
-                _window[atob('ZG9jdW1lbnQ=')][atob('d3JpdGU=')](atob('VmVyc2lvbiBtaXNzbWF0Y2gg') + version);
-                _window[atob('bG9jYX'+'Rpb24'+'=')][atob('aHJ'+'lZg='+'=')] = atob('aHR0cHM6'+'Ly9naXRodWIuY2'+'9tL2hydC93aGVlb'+'GNoYWly');
-            }
-
-            // note: this window is not the main window
-            window['canSee'] = script.match(/,this\['(\w+)'\]=function\(\w+,\w+,\w+,\w+,\w+\){if\(!\w+\)return!\w+;/)[1];
-            window['pchObjc'] = script.match(/\(\w+,\w+,\w+\),this\['(\w+)'\]=new \w+\['\w+'\]\(\)/)[1];
-            window['objInstances'] = script.match(/\[\w+\]\['\w+'\]=!\w+,this\['\w+'\]\[\w+\]\['\w+'\]&&\(this\['\w+'\]\[\w+\]\['(\w+)'\]\['\w+'\]=!\w+/)[1];
-            window['isYou'] = script.match(/,this\['\w+'\]=!\w+,this\['\w+'\]=!\w+,this\['(\w+)'\]=\w+,this\['\w+'\]\['length'\]=\w+,this\[/)[1];
-            window['recoilAnimY'] = script.match(/\w*1,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*1,this\['\w+'\]=\w*1,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,this\['\w+'\]=\w*0,/)[1];
-            window['mouseDownL'] = script.match(/this\['\w+'\]=function\(\){this\['(\w+)'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]={}/)[1];
-            window['mouseDownR'] = script.match(/this\['\w+'\]=function\(\){this\['(\w+)'\]=\w*0,this\['(\w+)'\]=\w*0,this\['\w+'\]={}/)[2];
-
-            const inputs = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[2];
-            const world = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[1];
-            const consts = script.match(/\w+\['\w+'\]\),\w+\['\w+'\]\(\w+\['\w+'\],\w+\['\w+'\]\+\w+\['\w+'\]\*(\w+)/)[1];
-            const me = script.match(/\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0,!(\w+)\['\w+'\]&&\w+\['\w+'\]\['push'\]\((\w+)\),(\w+)\['\w+'\]/)[3];
-            const math = script.match(/\\x20\-50\%\)\\x20rotate\('\+\((\w+)\['\w+'\]\(\w+\[\w+\]\['\w+'\]/)[1];
-
-
-            const code_to_overwrite = script.match(/(\w+\['\w+'\]&&\(\w+\['\w+'\]=\w+\['\w+'\],!\w+\['\w+'\]&&\w+\['\w+'\]\(\w+,\w*1\)\),\w+\['\w+'\]=\w*0,\w+\['\w+'\]=\w*0),!\w+\['\w+'\]&&\w+\['\w+'\]\['push'\]\(\w+\),\w+\['\w+'\]\(\w+,\w+,!\w*1,\w+\['\w+'\]\)/)[1];
-            const ttapParams = [me, inputs, world, consts, math].toString();
-            let call_hrt = `window.top['` + master_key + `'].get('hrt')(` + ttapParams + `)`;
-
-            /*
-                pad to avoid stack trace line:column number detection
-                the script will have the same length as it originally had
-            */
-            if (call_hrt.length > code_to_overwrite.length) {
-                throw 'WHEELCHAIR: target function too small ' + [call_hrt.length, code_to_overwrite.length];
-            }
-            let whitespaces = code_to_overwrite.match(/\s/g);
-            for (var i = 0; i < whitespaces && whitespaces.length; i++) {
-                call_hrt += whitespaces[i];
-            }
-            while (call_hrt.length < code_to_overwrite.length) {
-                call_hrt += ' ';
-            }
-
-            script = script.replace(code_to_overwrite, call_hrt);
-            conceal_string(code_to_overwrite, call_hrt);
-
-            /***********************************************************************************************************/
-            /* Below are some misc features which I wouldn't consider bannable                                         */
-            // all weapons trails on
-            script = script.replace(/\w+\['weapon'\]&&\w+\['weapon'\]\['trail'\]/g, "true")
-
-            // color blind mode
-            script = script.replace(/#9eeb56/g, '#00FFFF');
-
-            // no zoom
-            script = script.replace(/,'zoom':.+?(?=,)/g, ",'zoom':1");
-            /***********************************************************************************************************/
-            // bypass modification check of returned function
-            const original_script = args[1];
-            args[1] = script;
-            let mod_fn = new target(...args);
-            args[1] = original_script;
-            conceal_function(original_fn, mod_fn);
-            return mod_fn;
-        }
-        return original_fn;
-      }
     };
 
     // we intercept game.js at the `Function` generation level
     const original_Function = _window.Function;
     let hook_Function = new Proxy(original_Function, handler);
     _window.Function = hook_Function;
-
 
     conceal_function(original_open, hook_open);
     conceal_function(original_clearRect, hook_clearRect);
