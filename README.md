@@ -10,6 +10,6 @@ Remove all exisiting scripts.
 1. Navigate to chrome://extensions
 2. Enable developer mode (probably a checkbox in the top right)
 3. [Download this unpacked extension (click here)](https://github.com/hrt/wheelchair/releases/download/2.0/loader.zip)
-4. Drag the downloaded zip into the extensions page
+4. Drag the downloaded file into the extensions page ( you do not need to extract )
 
 If you can figure out reliable ways to identify the presence of the extension running then I am interested to know how.
